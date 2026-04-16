@@ -80,14 +80,9 @@ export default function RequestorInfo() {
                         <Field className={styles.col} style={{ flex: 2 }} hint="Province">
                             <Dropdown
                                 placeholder="Select Province"
-                                name="hardik"
                                 selectedOptions={data.province ? [data.province] : []}
                                 value={provinces.find(p => p.value === data.province)?.label || ''}
-                                onOptionSelect={(e, d) =>{
-                                    console.log(e);
-                                    
-                                     onUpdate('province', d.optionValue as string);
-                                }}
+                                onOptionSelect={(_, d) => onUpdate('province', d.optionValue as string)}
                             >
                                 {provinces.map(province => (
                                     <Option key={province.value} value={province.value}>

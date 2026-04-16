@@ -1,8 +1,9 @@
 'use client';
-import { Input, Field, Textarea, Button, Checkbox } from "@fluentui/react-components";
+import { Input, Field, Textarea, Button, Checkbox, InputOnChangeData, TextareaOnChangeData } from "@fluentui/react-components";
 import { AttachRegular, DeleteRegular } from "@fluentui/react-icons";
-import { useCallback } from "react";
+import { useCallback, ChangeEvent } from "react";
 
+import IFormState from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 
 import useProductStyles from "@/app/forms/product/useProductStyles";
@@ -10,6 +11,14 @@ import useProductStyles from "@/app/forms/product/useProductStyles";
 export default function Product() {
     const { formData: data, handleUpdate: onUpdate } = useFormContext();
     const styles = useProductStyles();
+
+    const handleInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>, d: InputOnChangeData) => {
+        onUpdate(ev.target.name as keyof IFormState, d.value);
+    }, [onUpdate]);
+
+    const handleTextareaChange = useCallback((ev: ChangeEvent<HTMLTextAreaElement>, d: TextareaOnChangeData) => {
+        onUpdate(ev.target.name as keyof IFormState, d.value);
+    }, [onUpdate]);
 
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -20,35 +29,37 @@ export default function Product() {
     return (
         <div className={styles.container}>
             <Field label="Appliance Brand" required>
-                <Input value={data.brand} onChange={(_, d) => onUpdate('brand', d.value)} />
+                <Input name="brand" value={data.brand} onChange={handleInputChange} />
             </Field>
 
             <Field label="Model Number">
-                <Input value={data.modelNumber} onChange={(_, d) => onUpdate('modelNumber', d.value)} />
+                <Input name="modelNumber" value={data.modelNumber} onChange={handleInputChange} />
             </Field>
 
             <Field label="Serial Number">
-                <Input value={data.serialNumber} onChange={(_, d) => onUpdate('serialNumber', d.value)} />
+                <Input name="serialNumber" value={data.serialNumber} onChange={handleInputChange} />
             </Field>
 
             <Field label="Delivery Date">
                 {/* Using standard type="date" for simplicity, or DatePicker component if installed */}
                 <Input
                     type="date"
+                    name="deliveryDate"
                     value={data.deliveryDate}
-                    onChange={(_, d) => onUpdate('deliveryDate', d.value)}
+                    onChange={handleInputChange}
                 />
             </Field>
             {data.customerType === "residential" &&
                 <Field label="Invoice Number">
-                    <Input value={data.invoiceNumber} onChange={(_, d) => onUpdate('invoiceNumber', d.value)} />
+                    <Input name="invoiceNumber" value={data.invoiceNumber} onChange={handleInputChange} />
                 </Field>
             }
 
             <Field label="Appliance Problem" required>
                 <Textarea
+                    name="problem"
                     value={data.problem}
-                    onChange={(_, d) => onUpdate('problem', d.value)}
+                    onChange={handleTextareaChange}
                     resize="vertical"
                 />
             </Field>
@@ -86,8 +97,9 @@ export default function Product() {
 
             <Field label="Additional information you think might help">
                 <Textarea
+                    name="additionalNotes"
                     value={data.additionalNotes}
-                    onChange={(_, d) => onUpdate('additionalNotes', d.value)}
+                    onChange={handleTextareaChange}
                     resize="vertical"
                 />
             </Field>

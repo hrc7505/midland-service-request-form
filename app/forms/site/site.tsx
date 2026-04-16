@@ -1,6 +1,8 @@
 'use client';
-import { Input, Field, Dropdown, Option } from "@fluentui/react-components";
+import { useCallback, ChangeEvent } from "react";
+import { Input, Field, Dropdown, Option, InputOnChangeData } from "@fluentui/react-components";
 
+import IFormState from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 
 import useSiteStyles from "@/app/forms/site/useSiteStyles";
@@ -15,28 +17,32 @@ export default function Site() {
     const styles = useSiteStyles();
     const { formData: data, handleUpdate: onUpdate } = useFormContext();
 
+    const handleInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>, d: InputOnChangeData) => {
+        onUpdate(ev.target.name as keyof IFormState, d.value);
+    }, [onUpdate]);
+
     return (
         <div className={styles.grid}>
             <Field label="Site Contact (if different)">
-                <Input value={data.siteContact} onChange={(_, d) => onUpdate('siteContact', d.value)} />
+                <Input name="siteContact" value={data.siteContact} onChange={handleInputChange} />
             </Field>
 
             <Field label="Project Name">
-                <Input value={data.projectName} onChange={(_, d) => onUpdate('projectName', d.value)} />
+                <Input name="projectName" value={data.projectName} onChange={handleInputChange} />
             </Field>
 
             {/* Address Section */}
             <Field label="Street Address" required hint="Address Line 1">
-                <Input value={data.siteAddress1} onChange={(_, d) => onUpdate('siteAddress1', d.value)} />
+                <Input name="siteAddress1" value={data.siteAddress1} onChange={handleInputChange} />
             </Field>
             <Field hint="Address Line 2">
-                <Input value={data.siteAddress2} onChange={(_, d) => onUpdate('siteAddress2', d.value)} />
+                <Input name="siteAddress2" value={data.siteAddress2} onChange={handleInputChange} />
             </Field>
 
             {/* City, Province, Postal Code Row */}
             <div className={styles.row}>
                 <Field className={styles.col} style={{ flex: 2 }} hint="City">
-                    <Input value={data.siteCity} onChange={(_, d) => onUpdate('siteCity', d.value)} />
+                    <Input name="siteCity" value={data.siteCity} onChange={handleInputChange} />
                 </Field>
                 <Field className={styles.col} style={{ flex: 2 }} hint="Province">
                     <Dropdown
@@ -53,16 +59,16 @@ export default function Site() {
                     </Dropdown>
                 </Field>
                 <Field className={styles.col} style={{ flex: 1 }} hint="Postal Code">
-                    <Input value={data.sitePostalCode} onChange={(_, d) => onUpdate('sitePostalCode', d.value)} />
+                    <Input name="sitePostalCode" value={data.sitePostalCode} onChange={handleInputChange} />
                 </Field>
             </div>
 
             <Field label="City and Province">
-                <Input value={data.cityAndProvince} onChange={(_, d) => onUpdate('cityAndProvince', d.value)} />
+                <Input name="cityAndProvince" value={data.cityAndProvince} onChange={handleInputChange} />
             </Field>
 
             <Field label="Unit Number (Required)" required>
-                <Input value={data.unitNumber} onChange={(_, d) => onUpdate('unitNumber', d.value)} />
+                <Input name="unitNumber" value={data.unitNumber} onChange={handleInputChange} />
             </Field>
         </div>
     );

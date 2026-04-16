@@ -45,8 +45,6 @@ const ServiceRequestForm = () => {
   }, [formData]);
 
   const handleFinalSave = useCallback(async () => {
-    console.log("Submitting full form to Next.js API Route:", formData);
-
     try {
       const response = await fetch('/api/incidents', {
         method: 'POST',
