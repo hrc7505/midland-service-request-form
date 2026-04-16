@@ -57,8 +57,8 @@ export async function POST(request: Request) {
         let accessToken: string;
         try {
             accessToken = await getAuthenticatedToken();
-        } catch (authError: any) {
-            return NextResponse.json({ error: 'Authentication Gateway Error' }, { status: 502 });
+        } catch (authError) {
+            return NextResponse.json({ error: authError instanceof Error ? authError.message : 'Authentication Gateway Error' }, { status: 502 });
         }
 
         // 3. Construct Dataverse Payload

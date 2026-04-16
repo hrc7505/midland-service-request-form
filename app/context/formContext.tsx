@@ -45,8 +45,7 @@ function getInitialFormData(): IFormState {
         deliveryDate: '',
         invoiceNumber: '',
         problem: '',
-        photo: null,
-        addMorePhotos: false,
+        photos: [],
         additionalNotes: '',
     };
 }

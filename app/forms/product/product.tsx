@@ -1,10 +1,10 @@
 'use client';
-import { Input, Field, Textarea, Button, Checkbox, InputOnChangeData, TextareaOnChangeData } from "@fluentui/react-components";
-import { AttachRegular, DeleteRegular } from "@fluentui/react-icons";
+import { Input, Field, Textarea, InputOnChangeData, TextareaOnChangeData } from "@fluentui/react-components";
 import { useCallback, ChangeEvent } from "react";
 
 import IFormState from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
+import FileUploader from "@/app/components/fileUploader/fileUploader";
 
 import useProductStyles from "@/app/forms/product/useProductStyles";
 
@@ -18,12 +18,6 @@ export default function Product() {
 
     const handleTextareaChange = useCallback((ev: ChangeEvent<HTMLTextAreaElement>, d: TextareaOnChangeData) => {
         onUpdate(ev.target.name as keyof IFormState, d.value);
-    }, [onUpdate]);
-
-    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            onUpdate('photo', e.target.files[0]);
-        }
     }, [onUpdate]);
 
     return (
@@ -64,36 +58,12 @@ export default function Product() {
                 />
             </Field>
 
-            <Field label="Additional photos (i.e. Picture of damage, Serial tag, etc.)">
-                <div className={styles.fileActionGroup}>
-                    <input
-                        type="file"
-                        id="file-upload"
-                        className={styles.fileInput}
-                        onChange={handleFileChange}
-                    />
-                    <Button
-                        icon={<AttachRegular />}
-                        onClick={() => document.getElementById('file-upload')?.click()}
-                    >
-                        Choose File
-                    </Button>
-                    <Button
-                        icon={<DeleteRegular />}
-                        disabled={!data.photo}
-                        onClick={() => onUpdate('photo', null)}
-                    >
-                        Remove File
-                    </Button>
-                    <span>{data.photo ? data.photo.name : 'No File Chosen'}</span>
-                </div>
+            <Field label="Additional photos (damage, serial tag, etc.)">
+                <FileUploader
+                    files={data.photos || []}
+                    onChange={(newFiles) => onUpdate('photos', newFiles)}
+                />
             </Field>
-
-            <Checkbox
-                label="Add More Photos"
-                checked={data.addMorePhotos}
-                onChange={(_, d) => onUpdate('addMorePhotos', !!d.checked)}
-            />
 
             <Field label="Additional information you think might help">
                 <Textarea

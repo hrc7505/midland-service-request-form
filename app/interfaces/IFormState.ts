@@ -37,7 +37,7 @@ export default interface IFormState {
     problem: string;
 
     // File Handling
-    photo: File | null;
-    addMorePhotos: boolean;
+    photos?: File[];
+    
     additionalNotes?: string;
 }
