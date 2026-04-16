@@ -46,7 +46,39 @@ const ServiceRequestForm = () => {
 
   const handleFinalSave = useCallback(async () => {
     console.log("Submitting full form to Next.js API Route:", formData);
-    // API Call here...
+
+    try {
+      const response = await fetch('/api/incidents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Logic for handling the production errors we set up in the API
+        throw new Error(result.error || 'Failed to submit request');
+      }
+
+      // Success! 
+      // result.ticketNumber and result.caseId are now available
+      alert(`Success! Your Service Request has been created: ${result.ticketNumber}`);
+
+      // Optional: Reset form or redirect to a thank you page
+      // window.location.href = `/success?ticket=${result.ticketNumber}`;
+
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Submission Error:", error.message);
+        alert(`Error: ${error.message}`);
+      } else {
+        console.error("Submission Error:", error);
+        alert('Error: Failed to submit request');
+      }
+    }
   }, [formData]);
 
   return <Wizard steps={steps} onSave={handleFinalSave} />;
