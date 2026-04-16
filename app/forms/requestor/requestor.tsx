@@ -1,6 +1,8 @@
 'use client';
-import { Input, Field, Label, Dropdown, Option } from "@fluentui/react-components";
+import { useCallback, ChangeEvent } from "react";
+import { Input, Field, Label, Dropdown, Option, InputOnChangeData } from "@fluentui/react-components";
 
+import IFormState from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 
 import useRequestorStyles from "@/app/forms/requestor/useRequestorStyles";
@@ -25,6 +27,10 @@ export default function RequestorInfo() {
     const styles = useRequestorStyles();
     const { formData: data, handleUpdate: onUpdate } = useFormContext();
 
+    const handleInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>, d: InputOnChangeData) => {
+        onUpdate(ev.target.name as keyof IFormState, d.value);
+    }, [onUpdate]);
+
     return (
         <div className={styles.grid}>
             {/* Name Row */}
@@ -32,26 +38,26 @@ export default function RequestorInfo() {
                 <Label required weight="regular" size="medium">Name</Label>
                 <div className={styles.row}>
                     <Field className={styles.col} hint="First Name">
-                        <Input value={data.firstName} onChange={(_, d) => onUpdate('firstName', d.value)} />
+                        <Input name="firstName" value={data.firstName} onChange={handleInputChange} />
                     </Field>
                     <Field className={styles.col} hint="Last Name">
-                        <Input value={data.lastName} onChange={(_, d) => onUpdate('lastName', d.value)} />
+                        <Input name="lastName" value={data.lastName} onChange={handleInputChange} />
                     </Field>
                 </div>
             </div>
 
             {/* Email & Phone */}
             <Field label="Email" size="medium">
-                <Input type="email" value={data.email} onChange={(_, d) => onUpdate('email', d.value)} />
+                <Input type="email" name="email" value={data.email} onChange={handleInputChange} />
             </Field>
 
             <Field label="Phone Number" required size="medium">
-                <Input type="tel" value={data.phone} onChange={(_, d) => onUpdate('phone', d.value)} />
+                <Input type="tel" name="phone" value={data.phone} onChange={handleInputChange} />
             </Field>
 
             {data.customerType === "builder"
                 ? <Field label="Midland Rep Name" required size="medium">
-                    <Input type="text" value={data.midlandRepName} onChange={(_, d) => onUpdate("midlandRepName", d.value)} />
+                    <Input type="text" name="midlandRepName" value={data.midlandRepName} onChange={handleInputChange} />
                 </Field>
                 :
                 <>
@@ -59,24 +65,29 @@ export default function RequestorInfo() {
                     <div>
                         <Label required weight="regular" size="medium">Address</Label>
                         <Field hint="Address Line 1">
-                            <Input value={data.address1} onChange={(_, d) => onUpdate('address1', d.value)} />
+                            <Input name="address1" value={data.address1} onChange={handleInputChange} />
                         </Field>
                     </div>
                     <Field hint="Address Line 2">
-                        <Input value={data.address2} onChange={(_, d) => onUpdate('address2', d.value)} />
+                        <Input name="address2" value={data.address2} onChange={handleInputChange} />
                     </Field>
 
                     {/* City, Province, Postal Code Row */}
                     <div className={styles.row}>
                         <Field className={styles.col} style={{ flex: 2 }} hint="City">
-                            <Input value={data.city} onChange={(_, d) => onUpdate('city', d.value)} />
+                            <Input name="city" value={data.city} onChange={handleInputChange} />
                         </Field>
                         <Field className={styles.col} style={{ flex: 2 }} hint="Province">
                             <Dropdown
                                 placeholder="Select Province"
+                                name="hardik"
                                 selectedOptions={data.province ? [data.province] : []}
                                 value={provinces.find(p => p.value === data.province)?.label || ''}
-                                onOptionSelect={(_, d) => onUpdate('province', d.optionValue as string)}
+                                onOptionSelect={(e, d) =>{
+                                    console.log(e);
+                                    
+                                     onUpdate('province', d.optionValue as string);
+                                }}
                             >
                                 {provinces.map(province => (
                                     <Option key={province.value} value={province.value}>
@@ -86,7 +97,7 @@ export default function RequestorInfo() {
                             </Dropdown>
                         </Field>
                         <Field className={styles.col} style={{ flex: 1 }} hint="Postal Code">
-                            <Input value={data.postalCode} onChange={(_, d) => onUpdate('postalCode', d.value)} />
+                            <Input name="postalCode" value={data.postalCode} onChange={handleInputChange} />
                         </Field>
                     </div>
                 </>
