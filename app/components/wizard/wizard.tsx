@@ -53,7 +53,7 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
             {/* Button Logic defined by your guide */}
             <div className={styles.footer}>
                 {!isFirst && (
-                    <Button icon={<ArrowLeftRegular />} onClick={back}>Back</Button>
+                    <Button disabled={saving} icon={<ArrowLeftRegular />} onClick={back}>Back</Button>
                 )}
 
                 {isLast ? (
@@ -61,7 +61,7 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
                         {saving ? <Spinner size="extra-tiny" label="Saving..." /> : "Submit"}
                     </Button>
                 ) : (
-                    <Button disabled={saving} appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={next}>Continue</Button>
+                    <Button appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={next}>Continue</Button>
                 )}
             </div>
         </div>

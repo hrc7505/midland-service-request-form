@@ -83,7 +83,7 @@ const ServiceRequestForm = () => {
     });
   }, [formData]);
 
-  return <Wizard steps={steps} onSave={handleFinalSave} saving={true} />;
+  return <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} />;
 };
 
 export default function ServiceRequestPage() {
