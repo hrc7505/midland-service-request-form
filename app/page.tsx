@@ -19,12 +19,12 @@ const ServiceRequestForm = () => {
     const listOfSteps: IWizardStep[] = [
       {
         id: 'selection',
-        label: 'Type',
+        label: 'Customer Type',
         component: <CustomerTypeCompo />
       },
       {
         id: 'requestor',
-        label: 'Requestor',
+        label: 'Requestor Information',
         component: <RequestorInfo />
       },
     ];
@@ -32,14 +32,14 @@ const ServiceRequestForm = () => {
     if (formData.customerType === CustomerType.Builder) {
       listOfSteps.push({
         id: 'site',
-        label: 'Site',
+        label: 'Site Information',
         component: <Site />
       });
     }
 
     listOfSteps.push({
       id: 'product',
-      label: 'Product',
+      label: 'Appliances',
       component: <Product />
     });
     return listOfSteps;
