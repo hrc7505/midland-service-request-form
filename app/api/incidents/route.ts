@@ -127,6 +127,7 @@ export async function POST(request: Request) {
                         error: result,
                     });
                 } else {
+                    console.log('[PRODUCT_SUCCESS]', product.appliance, result);
                     results.push({
                         success: true,
                         caseId: result.incidentid,
@@ -140,6 +141,7 @@ export async function POST(request: Request) {
                 });
             }
         }
+
 
         //clearTimeout(timeoutId);
 
