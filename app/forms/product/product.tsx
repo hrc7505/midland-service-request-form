@@ -9,8 +9,13 @@ import FileUploader from "@/app/components/fileUploader/fileUploader";
 import useProductStyles from "@/app/forms/product/useProductStyles";
 
 const appliances = [
-    { value: '132190000', label: 'Refrigerator' },
-    { value: '132190001', label: 'Dishwasher' },
+    { label: 'Refrigerator', value: '132190000' },
+    { label: 'Dishwasher', value: '132190001' },
+    { label: 'Washer', value: '132190002' },
+    { label: 'Dryer', value: '132190003' },
+    { label: 'Range', value: '132190004' },
+    { label: 'Oven', value: '132190005' },
+    { label: 'Microwave', value: '132190006' },
 ];
 
 export default function Product() {
