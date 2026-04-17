@@ -3,6 +3,20 @@ export enum CustomerType {
     Builder = '132190001'
 }
 
+export interface IProduct {
+    id: string; // important for React rendering
+    unitNumber?: string;
+    appliance?: string;
+    brand: string;
+    modelNumber?: string;
+    serialNumber?: string;
+    deliveryDate?: string;
+    invoiceNumber?: string;
+    problem: string;
+    photos?: File[];
+    additionalNotes?: string;
+}
+
 export default interface IFormState {
     // --- Step 1: Selection ---
     customerType: CustomerType;
@@ -28,20 +42,21 @@ export default interface IFormState {
     siteProvince?: string;
     sitePostalCode?: string;
     cityAndProvince?: string; */
-    unitNumber?: string;
-
-
+    
+    
     // --- Step 4: Product Information ---
-    brand: string;
-    modelNumber?: string;
-    serialNumber?: string;
-    deliveryDate?: string; // Stored as ISO string "YYYY-MM-DD"
-    invoiceNumber?: string;
-    problem: string;
-    appliance?: string;
+    /*  brand: string;
+    unitNumber?: string;
+     modelNumber?: string;
+     serialNumber?: string;
+     deliveryDate?: string; // Stored as ISO string "YYYY-MM-DD"
+     invoiceNumber?: string;
+     problem: string;
+     appliance?: string; */
+    products: IProduct[];
 
     // File Handling
-    photos?: File[];
+   // photos?: File[];
 
-    additionalNotes?: string;
+   // additionalNotes?: string;
 }

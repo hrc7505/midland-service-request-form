@@ -5,12 +5,12 @@ import IWizardStep from "@/app/components/wizard/interfaces/IWizardStep";
 import Wizard from "@/app/components/wizard/wizard";
 import CustomerTypeCompo from "@/app/forms/customerTypeCompo/customerTypeCompo";
 import RequestorInfo from "@/app/forms/requestor/requestor";
-import Product from "@/app/forms/product/product";
 import Site from "@/app/forms/site/site";
 import useFormContext, { FormProvider } from "@/app/context/formContext";
 import { CustomerType } from "@/app/interfaces/IFormState";
 
 import usePageStyles from "@/app/usePageStyles";
+import ProductList from "@/app/forms/productList/productList";
 
 const ServiceRequestForm = () => {
   const { formData } = useFormContext();
@@ -40,7 +40,7 @@ const ServiceRequestForm = () => {
     listOfSteps.push({
       id: 'product',
       label: 'Appliances',
-      component: <Product />
+      component: <ProductList />
     });
     return listOfSteps;
   }, [formData]);

@@ -37,17 +37,7 @@ function getInitialFormData(): IFormState {
          sitePostalCode: '',
          cityAndProvince: '', */
 
-        // Product Info
-        brand: '',
-        appliance: '',
-        modelNumber: '',
-        serialNumber: '',
-        unitNumber: '',
-        deliveryDate: '',
-        invoiceNumber: '',
-        problem: '',
-        photos: [],
-        additionalNotes: '',
+        products: [],
     };
 }
 

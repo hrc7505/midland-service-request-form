@@ -2,7 +2,7 @@ import { makeStyles, tokens } from "@fluentui/react-components";
 
 const useWizardStyles = makeStyles({
     wrapper: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', border: `1px solid ${tokens.colorNeutralStroke1}`, borderRadius: tokens.borderRadiusMedium },
-    header: { display: 'flex', justifyContent: 'space-between', paddingBottom: '12px' },
+    header: { display: 'flex', justifyContent: 'space-between' },
     footer: { display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '12px' },
     content: { minHeight: '200px' },
     forward: {
