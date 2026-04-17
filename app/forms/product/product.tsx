@@ -1,12 +1,17 @@
 'use client';
-import { Input, Field, Textarea, InputOnChangeData, TextareaOnChangeData } from "@fluentui/react-components";
+import { Input, Field, Textarea, InputOnChangeData, TextareaOnChangeData, Dropdown, Option } from "@fluentui/react-components";
 import { useCallback, ChangeEvent } from "react";
 
-import IFormState from "@/app/interfaces/IFormState";
+import IFormState, { CustomerType } from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 import FileUploader from "@/app/components/fileUploader/fileUploader";
 
 import useProductStyles from "@/app/forms/product/useProductStyles";
+
+const appliances = [
+    { value: '132190000', label: 'Refrigerator' },
+    { value: '132190001', label: 'Dishwasher' },
+];
 
 export default function Product() {
     const { formData: data, handleUpdate: onUpdate } = useFormContext();
@@ -22,6 +27,24 @@ export default function Product() {
 
     return (
         <div className={styles.container}>
+            {
+                data.customerType === CustomerType.Builder &&
+                <Field label="Unit Number (Required)" required>
+                    <Input name="unitNumber" value={data.unitNumber} onChange={handleInputChange} />
+                </Field>
+            }
+
+            <Field label="Appliance" required>
+                <Dropdown
+                    placeholder="Select Appliance"
+                    selectedOptions={data.appliance ? [data.appliance] : []}
+                    value={appliances.find(p => p.value === data.appliance)?.label || ''}
+                    onOptionSelect={(_, d) => onUpdate('appliance', d.optionValue as string)}
+                >
+                    {appliances.map(a => <Option key={a.value} value={a.value}>{a.label}</Option>)}
+                </Dropdown>
+            </Field>
+
             <Field label="Appliance Brand" required>
                 <Input name="brand" value={data.brand} onChange={handleInputChange} />
             </Field>
@@ -43,7 +66,7 @@ export default function Product() {
                     onChange={handleInputChange}
                 />
             </Field>
-            {data.customerType === "residential" &&
+            {data.customerType === CustomerType.Residential &&
                 <Field label="Invoice Number">
                     <Input name="invoiceNumber" value={data.invoiceNumber} onChange={handleInputChange} />
                 </Field>

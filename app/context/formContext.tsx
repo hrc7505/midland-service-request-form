@@ -2,7 +2,7 @@
 
 import { createContext, useState, useCallback, useContext, ReactNode } from 'react';
 
-import IFormState from '@/app/interfaces/IFormState';
+import IFormState, { CustomerType } from '@/app/interfaces/IFormState';
 
 interface IFormContext {
     formData: IFormState;
@@ -13,7 +13,7 @@ const FormContext = createContext<IFormContext | undefined>(undefined);
 
 function getInitialFormData(): IFormState {
     return {
-        customerType: 'residential',
+        customerType: CustomerType.Residential,
 
         // Requestor Info
         firstName: '',
@@ -30,18 +30,19 @@ function getInitialFormData(): IFormState {
         // Site Info
         siteContact: '',
         projectName: '',
-        siteAddress1: '',
-        siteAddress2: '',
-        siteCity: '',
-        siteProvince: '',
-        sitePostalCode: '',
-        cityAndProvince: '',
-        unitNumber: '',
+        /*  siteAddress1: '',
+         siteAddress2: '',
+         siteCity: '',
+         siteProvince: '',
+         sitePostalCode: '',
+         cityAndProvince: '', */
 
         // Product Info
         brand: '',
+        appliance: '',
         modelNumber: '',
         serialNumber: '',
+        unitNumber: '',
         deliveryDate: '',
         invoiceNumber: '',
         problem: '',

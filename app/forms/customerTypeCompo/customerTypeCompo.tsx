@@ -2,11 +2,12 @@
 import { Radio, RadioGroup, Label } from "@fluentui/react-components";
 
 import useFormContext from "@/app/context/formContext";
+import { CustomerType } from "@/app/interfaces/IFormState";
 
-import useCustomerTypeStyles from "@/app/forms/customerType/useCustomerTypeStyles";
+import useCustomerTypeCompoStyles from "@/app/forms/customerTypeCompo/useCustomerTypeCompoStyles";
 
-const CustomerType = () => {
-    const styles = useCustomerTypeStyles();
+const CustomerTypeCompo = () => {
+    const styles = useCustomerTypeCompoStyles();
     const { formData, handleUpdate } = useFormContext();
 
     return (
@@ -15,11 +16,11 @@ const CustomerType = () => {
                 I am a Residential Customer or Single Family Builder
             </Label>
             <RadioGroup value={formData.customerType} onChange={(_, d) => handleUpdate('customerType', d.value)}>
-                <Radio value="residential" label="I am a Residential Customer or Single Family Builder" />
-                <Radio value="builder" label="I am a Multi-Family Builder" />
+                <Radio value={CustomerType.Residential} label="I am a Residential Customer or Single Family Builder" />
+                <Radio value={CustomerType.Builder} label="I am a Multi-Family Builder" />
             </RadioGroup>
         </div>
     );
 };
 
-export default CustomerType;
+export default CustomerTypeCompo;

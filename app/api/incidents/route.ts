@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import IFormState from '@/app/interfaces/IFormState';
+import IServiceModel from '@/app/models/IServiceModel';
 
 /**
  * Centralized Auth Utility with Error Boundary
@@ -61,6 +62,35 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: authError instanceof Error ? authError.message : 'Authentication Gateway Error' }, { status: 502 });
         }
 
+        const newPayload: IServiceModel = {
+            midland_intaketype: body.customerType,
+
+            midland_firstname: body.firstName,
+            midland_lastname: body.lastName,
+            midland_email: body.email,
+            midland_phone: body.phone,
+            midland_serviceaddress: `${body.address1} ${body.address2 || ''}`,
+            midland_city: body.city,
+            midland_province: body.province,
+            midland_postalcode: body.postalCode,
+            midland_repname: body.midlandRepName,
+
+            midland_projectname: body.projectName,
+            midland_sitecontact: body.siteContact,
+            midland_unitnumber: body.unitNumber,
+
+            midland_appliance: body.appliance,
+            midland_brand: body.brand,
+            midland_modelnumber: body.modelNumber,
+            midland_serialnumber: body.serialNumber,
+            midland_deliverydate: body.deliveryDate,
+            midland_invoicenumber: body.invoiceNumber,
+            midland_applianceproblem: body.problem,
+           // midland_ReviewNotes: body.additionalNotes,
+        };
+
+        console.log(newPayload);
+
         // 3. Construct Dataverse Payload
         const incidentPayload = {
             "title": `Web Request: ${body.brand} - ${body.lastName}`.substring(0, 200),
@@ -82,7 +112,7 @@ export async function POST(request: Request) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-        const dvResponse = await fetch(`${process.env.DATAVERSE_URL}/api/data/v9.2/incidents`, {
+        const dvResponse = await fetch(`${process.env.DATAVERSE_URL}/api/data/v9.2/midland_serviceintakes`, {
             method: 'POST',
             signal: controller.signal,
             headers: {
@@ -92,14 +122,14 @@ export async function POST(request: Request) {
                 'OData-MaxVersion': '4.0',
                 'OData-Version': '4.0',
             },
-            body: JSON.stringify({
+            body: JSON.stringify(newPayload/* {
                 "title": "API test case",
                 "customerid_account@odata.bind": "/accounts(6594655a-e931-f111-88b3-70a8a50fd20f)",
                 "midland_brand": "Whirlpool",
                 "midland_modelnumber": "TEST123",
                 "midland_serialnumber": "SER123",
                 "midland_problemdescription": "Created from API"
-            }),
+            } */),
         });
 
         clearTimeout(timeoutId);

@@ -2,14 +2,14 @@
 import { useCallback, ChangeEvent } from "react";
 import { Input, Field, Label, Dropdown, Option, InputOnChangeData } from "@fluentui/react-components";
 
-import IFormState from "@/app/interfaces/IFormState";
+import IFormState, { CustomerType } from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 
 import useRequestorStyles from "@/app/forms/requestor/useRequestorStyles";
 
 const provinces = [
     { value: 'AB', label: 'Alberta' },
-    { value: 'BC', label: 'British Columbia' },
+    { value: '132190000', label: 'British Columbia' },
     { value: 'MB', label: 'Manitoba' },
     { value: 'NB', label: 'New Brunswick' },
     { value: 'NL', label: 'Newfoundland and Labrador' },
@@ -55,7 +55,7 @@ export default function RequestorInfo() {
                 <Input type="tel" name="phone" value={data.phone} onChange={handleInputChange} />
             </Field>
 
-            {data.customerType === "builder"
+            {data.customerType === CustomerType.Builder
                 ? <Field label="Midland Rep Name" required size="medium">
                     <Input type="text" name="midlandRepName" value={data.midlandRepName} onChange={handleInputChange} />
                 </Field>

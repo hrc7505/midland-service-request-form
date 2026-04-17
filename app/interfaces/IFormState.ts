@@ -1,4 +1,7 @@
-export type CustomerType = 'residential' | 'builder';
+export enum CustomerType {
+    Residential = '132190000',
+    Builder = '132190001'
+}
 
 export default interface IFormState {
     // --- Step 1: Selection ---
@@ -19,12 +22,12 @@ export default interface IFormState {
     // --- Step 3: Site Information (Optional for Residential) ---
     siteContact?: string;
     projectName?: string;
-    siteAddress1?: string;
+    /* siteAddress1?: string;
     siteAddress2?: string;
     siteCity?: string;
     siteProvince?: string;
     sitePostalCode?: string;
-    cityAndProvince?: string;
+    cityAndProvince?: string; */
     unitNumber?: string;
 
 
@@ -35,9 +38,10 @@ export default interface IFormState {
     deliveryDate?: string; // Stored as ISO string "YYYY-MM-DD"
     invoiceNumber?: string;
     problem: string;
+    appliance?: string;
 
     // File Handling
     photos?: File[];
-    
+
     additionalNotes?: string;
 }

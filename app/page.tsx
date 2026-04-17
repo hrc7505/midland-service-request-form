@@ -3,11 +3,12 @@ import { useCallback, useMemo } from "react";
 
 import IWizardStep from "@/app/components/wizard/interfaces/IWizardStep";
 import Wizard from "@/app/components/wizard/wizard";
-import CustomerType from "@/app/forms/customerType/customerType";
+import CustomerTypeCompo from "@/app/forms/customerTypeCompo/customerTypeCompo";
 import RequestorInfo from "@/app/forms/requestor/requestor";
 import Product from "@/app/forms/product/product";
 import Site from "@/app/forms/site/site";
 import useFormContext, { FormProvider } from "@/app/context/formContext";
+import { CustomerType } from "@/app/interfaces/IFormState";
 
 import usePageStyles from "@/app/usePageStyles";
 
@@ -19,7 +20,7 @@ const ServiceRequestForm = () => {
       {
         id: 'selection',
         label: 'Type',
-        component: <CustomerType />
+        component: <CustomerTypeCompo />
       },
       {
         id: 'requestor',
@@ -28,7 +29,7 @@ const ServiceRequestForm = () => {
       },
     ];
 
-    if (formData.customerType === "builder") {
+    if (formData.customerType === CustomerType.Builder) {
       listOfSteps.push({
         id: 'site',
         label: 'Site',

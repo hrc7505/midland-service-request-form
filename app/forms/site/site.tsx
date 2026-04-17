@@ -1,17 +1,17 @@
 'use client';
 import { useCallback, ChangeEvent } from "react";
-import { Input, Field, Dropdown, Option, InputOnChangeData } from "@fluentui/react-components";
+import { Input, Field, /* Dropdown, Option, */ InputOnChangeData } from "@fluentui/react-components";
 
 import IFormState from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 
 import useSiteStyles from "@/app/forms/site/useSiteStyles";
 
-const provinces = [
+/* const provinces = [
     { value: 'ON', label: 'Ontario' },
     { value: 'QC', label: 'Quebec' },
     { value: 'AB', label: 'Alberta' },
-];
+]; */
 
 export default function Site() {
     const styles = useSiteStyles();
@@ -32,15 +32,15 @@ export default function Site() {
             </Field>
 
             {/* Address Section */}
-            <Field label="Street Address" required hint="Address Line 1">
+           {/*  <Field label="Street Address" required hint="Address Line 1">
                 <Input name="siteAddress1" value={data.siteAddress1} onChange={handleInputChange} />
             </Field>
             <Field hint="Address Line 2">
                 <Input name="siteAddress2" value={data.siteAddress2} onChange={handleInputChange} />
-            </Field>
+            </Field> */}
 
             {/* City, Province, Postal Code Row */}
-            <div className={styles.row}>
+            {/* <div className={styles.row}>
                 <Field className={styles.col} style={{ flex: 2 }} hint="City">
                     <Input name="siteCity" value={data.siteCity} onChange={handleInputChange} />
                 </Field>
@@ -65,11 +65,7 @@ export default function Site() {
 
             <Field label="City and Province">
                 <Input name="cityAndProvince" value={data.cityAndProvince} onChange={handleInputChange} />
-            </Field>
-
-            <Field label="Unit Number (Required)" required>
-                <Input name="unitNumber" value={data.unitNumber} onChange={handleInputChange} />
-            </Field>
+            </Field> */}
         </div>
     );
 }
