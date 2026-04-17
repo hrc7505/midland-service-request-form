@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useState } from 'react';
-import { Button, Divider } from "@fluentui/react-components";
+import { Button, Divider, Spinner } from "@fluentui/react-components";
 import { ArrowLeftRegular, ArrowRightRegular, SaveRegular } from "@fluentui/react-icons";
 
 import StepItem from '@/app/components/wizard/stepItem/stepItem';
@@ -8,7 +8,7 @@ import IWizardProps from '@/app/components/wizard/interfaces/IWizardProps';
 
 import useWizardStyles from '@/app/components/wizard/useWizardStyles';
 
-const Wizard = ({ steps, onSave }: IWizardProps) => {
+const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
     const styles = useWizardStyles();
     const [currentIdx, setCurrentIdx] = useState(0);
     const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
@@ -57,9 +57,11 @@ const Wizard = ({ steps, onSave }: IWizardProps) => {
                 )}
 
                 {isLast ? (
-                    <Button appearance="primary" icon={<SaveRegular />} onClick={onSave}>Save</Button>
+                    <Button disabled={saving} appearance="primary" icon={!saving ? <SaveRegular /> : null} onClick={onSave}>
+                        {saving ? <Spinner size="extra-tiny" label="Saving..." /> : "Submit"}
+                    </Button>
                 ) : (
-                    <Button appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={next}>Continue</Button>
+                    <Button disabled={saving} appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={next}>Continue</Button>
                 )}
             </div>
         </div>

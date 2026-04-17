@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useTransition } from "react";
 
 import IWizardStep from "@/app/components/wizard/interfaces/IWizardStep";
 import Wizard from "@/app/components/wizard/wizard";
@@ -14,6 +14,7 @@ import ProductList from "@/app/forms/productList/productList";
 
 const ServiceRequestForm = () => {
   const { formData } = useFormContext();
+  const [isPending, startTranstion] = useTransition();
 
   const steps = useMemo<IWizardStep[]>(() => {
     const listOfSteps: IWizardStep[] = [
@@ -46,41 +47,43 @@ const ServiceRequestForm = () => {
   }, [formData]);
 
   const handleFinalSave = useCallback(async () => {
-    try {
-      const response = await fetch('/api/incidents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+    startTranstion(async () => {
+      try {
+        const response = await fetch('/api/incidents', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (!response.ok) {
-        // Logic for handling the production errors we set up in the API
-        throw new Error(result.error || 'Failed to submit request');
+        if (!response.ok) {
+          // Logic for handling the production errors we set up in the API
+          throw new Error(result.error || 'Failed to submit request');
+        }
+
+        // Success! 
+        // result.ticketNumber and result.caseId are now available
+        alert(`Success! Your Service Request has been created`);
+
+        // Optional: Reset form or redirect to a thank you page
+        // window.location.href = `/success?ticket=${result.ticketNumber}`;
+
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error("Submission Error:", error.message);
+          alert(`Error: ${error.message}`);
+        } else {
+          console.error("Submission Error:", error);
+          alert('Error: Failed to submit request');
+        }
       }
-
-      // Success! 
-      // result.ticketNumber and result.caseId are now available
-      alert(`Success! Your Service Request has been created: ${result.ticketNumber}`);
-
-      // Optional: Reset form or redirect to a thank you page
-      // window.location.href = `/success?ticket=${result.ticketNumber}`;
-
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Submission Error:", error.message);
-        alert(`Error: ${error.message}`);
-      } else {
-        console.error("Submission Error:", error);
-        alert('Error: Failed to submit request');
-      }
-    }
+    });
   }, [formData]);
 
-  return <Wizard steps={steps} onSave={handleFinalSave} />;
+  return <Wizard steps={steps} onSave={handleFinalSave} saving={true} />;
 };
 
 export default function ServiceRequestPage() {
