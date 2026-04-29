@@ -1,11 +1,11 @@
 'use client';
 
-import * as React from 'react';
 import { FluentProvider, webLightTheme, createDOMRenderer, RendererProvider, renderToStyleElements } from '@fluentui/react-components';
 import { useServerInsertedHTML } from 'next/navigation';
+import { useMemo } from 'react';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-    const renderer = React.useMemo(() => createDOMRenderer(), []);
+    const renderer = useMemo(() => createDOMRenderer(), []);
 
     useServerInsertedHTML(() => {
         const styles = renderToStyleElements(renderer);
@@ -14,7 +14,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <RendererProvider renderer={renderer}>
-            <FluentProvider theme={webLightTheme}>
+            <FluentProvider theme={webLightTheme} className='h-full'>
                 {children}
             </FluentProvider>
         </RendererProvider>
