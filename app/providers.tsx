@@ -1,12 +1,22 @@
-// app/providers.tsx
 'use client';
-import { FluentProvider, webLightTheme } from '@fluentui/react-components';
-import React from 'react';
+
+import * as React from 'react';
+import { FluentProvider, webLightTheme, createDOMRenderer, RendererProvider, renderToStyleElements } from '@fluentui/react-components';
+import { useServerInsertedHTML } from 'next/navigation';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+    const renderer = React.useMemo(() => createDOMRenderer(), []);
+
+    useServerInsertedHTML(() => {
+        const styles = renderToStyleElements(renderer);
+        return <>{styles}</>;
+    });
+
     return (
-        <FluentProvider theme={webLightTheme}>
-            {children}
-        </FluentProvider>
+        <RendererProvider renderer={renderer}>
+            <FluentProvider theme={webLightTheme}>
+                {children}
+            </FluentProvider>
+        </RendererProvider>
     );
 }
