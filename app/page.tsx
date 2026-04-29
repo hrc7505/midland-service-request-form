@@ -11,6 +11,7 @@ import { CustomerType } from "@/app/interfaces/IFormState";
 
 import usePageStyles from "@/app/usePageStyles";
 import ProductList from "@/app/forms/productList/productList";
+import FormValidators from "@/app/utils/formValidations";
 
 const ServiceRequestForm = () => {
   const { formData } = useFormContext();
@@ -21,12 +22,14 @@ const ServiceRequestForm = () => {
       {
         id: 'selection',
         label: 'Customer Type',
-        component: <CustomerTypeCompo />
+        component: <CustomerTypeCompo />,
+        isValid: true,
       },
       {
         id: 'requestor',
         label: 'Requestor Information',
-        component: <RequestorInfo />
+        component: <RequestorInfo />,
+        isValid: FormValidators.isRequestorValid(formData),
       },
     ];
 
@@ -34,14 +37,16 @@ const ServiceRequestForm = () => {
       listOfSteps.push({
         id: 'site',
         label: 'Site Information',
-        component: <Site />
+        component: <Site />,
+        isValid: FormValidators.isSiteValid(formData),
       });
     }
 
     listOfSteps.push({
       id: 'product',
       label: 'Appliances',
-      component: <ProductList />
+      component: <ProductList />,
+      isValid: FormValidators.areProductsValid(formData),
     });
     return listOfSteps;
   }, [formData]);
