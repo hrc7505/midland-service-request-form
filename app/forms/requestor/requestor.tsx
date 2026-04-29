@@ -66,12 +66,14 @@ export default function RequestorInfo() {
                         <Field className={styles.col} style={{ flex: 2 }} hint="City">
                             <Input name="city" value={data.city} onChange={handleInputChange} />
                         </Field>
-                        <Field className={styles.col} style={{ flex: 2 }} hint="Province">
+                        <Field className={styles.col} style={{ flex: 2 }} hint="Province" required>
                             <Dropdown
                                 placeholder="Select Province"
                                 selectedOptions={data.province ? [data.province] : []}
                                 value={provinces.find(p => p.value === data.province)?.label || ''}
                                 onOptionSelect={(_, d) => onUpdate('province', d.optionValue as string)}
+                                aria-required="true"
+                                aria-label="Select Province"
                             >
                                 {provinces.map(province => (
                                     <Option key={province.value} value={province.value}>
