@@ -1,6 +1,8 @@
 'use client';
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { DismissRegular } from "@fluentui/react-icons";
+import { Button, MessageBar, MessageBarActions, MessageBarBody, MessageBarGroup } from "@fluentui/react-components";
 
 import IWizardStep from "@/app/components/wizard/interfaces/IWizardStep";
 import Wizard from "@/app/components/wizard/wizard";
@@ -15,9 +17,11 @@ import ProductList from "@/app/forms/productList/productList";
 import usePageStyles from "@/app/usePageStyles";
 
 const ServiceRequestForm = () => {
+  const styles = usePageStyles();
   const { formData } = useFormContext();
   const [isPending, startTranstion] = useTransition();
   const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState<string>();
 
   const steps = useMemo<IWizardStep[]>(() => {
     const listOfSteps: IWizardStep[] = [
@@ -74,17 +78,41 @@ const ServiceRequestForm = () => {
         router.push("/success");
       } catch (error) {
         if (error instanceof Error) {
-          console.error("Submission Error:", error.message);
-          alert(`Error: ${error.message}`);
+          setErrorMsg(error.message);
         } else {
-          console.error("Submission Error:", error);
-          alert('Error: Failed to submit request');
+          setErrorMsg('Failed to submit request');
         }
       }
     });
-  }, [formData]);
+  }, [formData, router]);
 
-  return <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} />;
+  return (
+    <div>
+      <MessageBarGroup animate="both" >
+        {errorMsg
+          ? [
+            <MessageBar intent="error" key="intent-error" className={styles.messageBar}>
+              <MessageBarBody>
+                {errorMsg}
+              </MessageBarBody>
+              <MessageBarActions
+                containerAction={
+                  <Button
+                    onClick={() => setErrorMsg(undefined)}
+                    aria-label="dismiss"
+                    appearance="transparent"
+                    icon={<DismissRegular />}
+                  />
+                }
+              />
+            </MessageBar>
+          ]
+          : []
+        }
+      </MessageBarGroup>
+      <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} />
+    </div>
+  );
 };
 
 export default function ServiceRequestPage() {
