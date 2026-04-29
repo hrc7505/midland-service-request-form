@@ -15,11 +15,14 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
 
     const isFirst = currentIdx === 0;
     const isLast = currentIdx === steps.length - 1;
+    const canProgress = steps[currentIdx].isValid !== false;
 
     const next = useCallback(() => {
-        setDirection('forward');
-        setCurrentIdx(prev => Math.min(prev + 1, steps.length - 1));
-    }, [steps.length]);
+        if (canProgress) {
+            setDirection('forward');
+            setCurrentIdx(prev => Math.min(prev + 1, steps.length - 1));
+        }
+    }, [canProgress, steps.length]);
 
     const back = useCallback(() => {
         setDirection('backward');
@@ -57,11 +60,11 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
                 )}
 
                 {isLast ? (
-                    <Button disabled={saving} appearance="primary" icon={!saving ? <SaveRegular /> : null} onClick={onSave}>
+                    <Button disabled={saving || !canProgress} appearance="primary" icon={!saving ? <SaveRegular /> : null} onClick={onSave}>
                         {saving ? <Spinner size="extra-tiny" label="Saving..." /> : "Submit"}
                     </Button>
                 ) : (
-                    <Button appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={next}>Continue</Button>
+                    <Button disabled={!canProgress} appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={next}>Continue</Button>
                 )}
             </div>
         </div>

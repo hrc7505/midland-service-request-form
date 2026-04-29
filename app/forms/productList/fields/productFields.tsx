@@ -14,8 +14,10 @@ import { useCallback } from "react";
 import { IProduct, CustomerType } from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 import FileUploader from "@/app/components/fileUploader/fileUploader";
-
+import useFieldValidation from "@/app/hooks/useFieldValidation";
 import type { UpdateProductFn } from "@/app/forms/productList/types/types";
+import FormValidators from "@/app/utils/formValidations";
+
 import useProductFormFieldStyles from "@/app/forms/productList/fields/useProductFormFieldStyles";
 
 interface ProductFormFieldsProps {
@@ -42,6 +44,23 @@ export default function ProductFormFields({
 }: ProductFormFieldsProps) {
     const styles = useProductFormFieldStyles();
     const { formData } = useFormContext();
+    const { registerField } = useFieldValidation<IProduct>();
+
+    const applianceField = registerField(
+        'appliance',
+        FormValidators.hasText(product.appliance),
+        "Appliance is required."
+    );
+    const brandField = registerField(
+        'brand',
+        FormValidators.hasText(product.brand),
+        "Brand is required."
+    );
+    const applianceProblemField = registerField(
+        'problem',
+        FormValidators.hasText(product.problem),
+        "Problem description is required."
+    );
 
     /**
      * Generic input handler
@@ -101,7 +120,7 @@ export default function ProductFormFields({
             )}
 
             {/* Appliance */}
-            <Field label="Appliance" required>
+            <Field label="Appliance" required {...applianceField.fieldProps}>
                 <Dropdown
                     placeholder="Select Appliance"
                     selectedOptions={product.appliance ? [product.appliance] : []}
@@ -109,6 +128,7 @@ export default function ProductFormFields({
                         APPLIANCES.find(a => a.value === product.appliance)?.label || ''
                     }
                     onOptionSelect={handleApplianceChange}
+                    {...applianceField.inputProps}
                 >
                     {APPLIANCES.map(item => (
                         <Option key={item.value} value={item.value}>
@@ -119,10 +139,11 @@ export default function ProductFormFields({
             </Field>
 
             {/* Brand */}
-            <Field label="Appliance Brand" required>
+            <Field label="Appliance Brand" required {...brandField.fieldProps}>
                 <Input
                     value={product.brand}
                     onChange={handleInputChange('brand')}
+                    {...brandField.inputProps}
                 />
             </Field>
 
@@ -162,11 +183,12 @@ export default function ProductFormFields({
             )}
 
             {/* Problem */}
-            <Field label="Appliance Problem" required>
+            <Field label="Appliance Problem" required {...applianceProblemField.fieldProps}>
                 <Textarea
                     resize="vertical"
                     value={product.problem}
                     onChange={handleTextareaChange('problem')}
+                    {...applianceProblemField.inputProps}
                 />
             </Field>
 
