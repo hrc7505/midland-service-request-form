@@ -1834,6 +1834,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@googlemaps/js-api-loader@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@googlemaps/js-api-loader@npm:2.0.2"
+  dependencies:
+    "@types/google.maps": "npm:^3.53.1"
+  checksum: 10c0/1bd8f1e117145de83a7cfca7c05cf4cfb2d9095d507497f8b0e590be94de3a6a27a7a3c80801de6f58d77e5a2ce169a6b6d9c9d0dfc20ea1039d890226318c46
+  languageName: node
+  linkType: hard
+
 "@griffel/core@npm:^1.16.0, @griffel/core@npm:^1.20.1":
   version: 1.20.1
   resolution: "@griffel/core@npm:1.20.1"
@@ -2333,6 +2342,20 @@ __metadata:
   version: 1.0.8
   resolution: "@types/estree@npm:1.0.8"
   checksum: 10c0/39d34d1afaa338ab9763f37ad6066e3f349444f9052b9676a7cc0252ef9485a41c6d81c9c4e0d26e9077993354edf25efc853f3224dd4b447175ef62bdcc86a5
+  languageName: node
+  linkType: hard
+
+"@types/google.maps@npm:^3.53.1, @types/google.maps@npm:^3.64.0":
+  version: 3.64.0
+  resolution: "@types/google.maps@npm:3.64.0"
+  checksum: 10c0/59895cade8d70d9d0b2a40b0edeea683555d117cfb4467079357eb8cc81a5e29358a6b22d4c1e3ce2618e3125ecf8853b9a108ada11a33c47f01b8db51a65d5f
+  languageName: node
+  linkType: hard
+
+"@types/iso-3166-2@npm:^1":
+  version: 1.0.4
+  resolution: "@types/iso-3166-2@npm:1.0.4"
+  checksum: 10c0/2dd74279d33136a29f8b5755362f6a7f3fe2eb1ea5bfee5cd55487ecac6a7ec75a87994eaad65d05f25358a45bc2ce69ef7bc323e90a2b5a9cde5350c6fc0b85
   languageName: node
   linkType: hard
 
@@ -4251,6 +4274,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"iso-3166-2@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "iso-3166-2@npm:1.0.0"
+  checksum: 10c0/3b8e46c4a74c2685c1549f00cd23da9bf3752de6e651146116af0f9230b388e44c21eaf37ecfee6a4d9b052a99607b61bcfbd33835593939cdd61130e8c3bffc
+  languageName: node
+  linkType: hard
+
 "iterator.prototype@npm:^1.1.5":
   version: 1.1.5
   resolution: "iterator.prototype@npm:1.1.5"
@@ -4453,11 +4483,15 @@ __metadata:
   dependencies:
     "@fluentui/react-components": "npm:^9.73.7"
     "@fluentui/react-icons": "npm:^2.0.324"
+    "@googlemaps/js-api-loader": "npm:^2.0.2"
+    "@types/google.maps": "npm:^3.64.0"
+    "@types/iso-3166-2": "npm:^1"
     "@types/node": "npm:^20"
     "@types/react": "npm:^19"
     "@types/react-dom": "npm:^19"
     eslint: "npm:^9"
     eslint-config-next: "npm:16.2.3"
+    iso-3166-2: "npm:^1.0.0"
     next: "npm:16.2.3"
     react: "npm:19.2.4"
     react-dom: "npm:19.2.4"
