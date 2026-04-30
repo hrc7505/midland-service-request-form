@@ -14,7 +14,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <RendererProvider renderer={renderer}>
-            <FluentProvider theme={webLightTheme} className='h-full'>
+            <FluentProvider theme={webLightTheme}>
                 {children}
             </FluentProvider>
         </RendererProvider>
