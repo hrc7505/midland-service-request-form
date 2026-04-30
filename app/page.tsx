@@ -1,5 +1,8 @@
 'use client';
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { DismissRegular } from "@fluentui/react-icons";
+import { Button, MessageBar, MessageBarActions, MessageBarBody, MessageBarGroup } from "@fluentui/react-components";
 
 import IWizardStep from "@/app/components/wizard/interfaces/IWizardStep";
 import Wizard from "@/app/components/wizard/wizard";
@@ -8,14 +11,17 @@ import RequestorInfo from "@/app/forms/requestor/requestor";
 import Site from "@/app/forms/site/site";
 import useFormContext, { FormProvider } from "@/app/context/formContext";
 import { CustomerType } from "@/app/interfaces/IFormState";
+import FormValidators from "@/app/utils/formValidations";
+import ProductList from "@/app/forms/productList/productList";
 
 import usePageStyles from "@/app/usePageStyles";
-import ProductList from "@/app/forms/productList/productList";
-import FormValidators from "@/app/utils/formValidations";
 
 const ServiceRequestForm = () => {
+  const styles = usePageStyles();
   const { formData } = useFormContext();
   const [isPending, startTranstion] = useTransition();
+  const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState<string>();
 
   const steps = useMemo<IWizardStep[]>(() => {
     const listOfSteps: IWizardStep[] = [
@@ -69,26 +75,44 @@ const ServiceRequestForm = () => {
           throw new Error(result.error || 'Failed to submit request');
         }
 
-        // Success! 
-        // result.ticketNumber and result.caseId are now available
-        alert(`Success! Your Service Request has been created`);
-
-        // Optional: Reset form or redirect to a thank you page
-        // window.location.href = `/success?ticket=${result.ticketNumber}`;
-
+        router.push("/success");
       } catch (error) {
         if (error instanceof Error) {
-          console.error("Submission Error:", error.message);
-          alert(`Error: ${error.message}`);
+          setErrorMsg(error.message);
         } else {
-          console.error("Submission Error:", error);
-          alert('Error: Failed to submit request');
+          setErrorMsg('Failed to submit request');
         }
       }
     });
-  }, [formData]);
+  }, [formData, router]);
 
-  return <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} />;
+  return (
+    <div>
+      <MessageBarGroup animate="both" >
+        {errorMsg
+          ? [
+            <MessageBar intent="error" key="intent-error" className={styles.messageBar}>
+              <MessageBarBody>
+                {errorMsg}
+              </MessageBarBody>
+              <MessageBarActions
+                containerAction={
+                  <Button
+                    onClick={() => setErrorMsg(undefined)}
+                    aria-label="dismiss"
+                    appearance="transparent"
+                    icon={<DismissRegular />}
+                  />
+                }
+              />
+            </MessageBar>
+          ]
+          : []
+        }
+      </MessageBarGroup>
+      <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} />
+    </div>
+  );
 };
 
 export default function ServiceRequestPage() {
