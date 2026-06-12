@@ -54,9 +54,12 @@ function buildPayload(body: IFormState, product: IProduct): IServiceModel {
         midland_province: body.province,
         midland_postalcode: body.postalCode,
         midland_repname: body.midlandRepName,
+        midland_accountnumber: body.midlandAccount,
 
         midland_projectname: body.projectName,
         midland_sitecontact: body.siteContact,
+        midland_sitecontact_phonenumber: body.siteContactPhone,
+        midland_sitecontact_email: body.siteContactEmail,
         midland_unitnumber: product.unitNumber,
 
         // Product-specific
@@ -135,6 +138,7 @@ export async function POST(request: Request) {
                     });
                 }
             } catch (err) {
+                console.error('[PRODUCT_REQUEST_ERROR]', err);
                 results.push({
                     success: false,
                     error: 'Request failed',

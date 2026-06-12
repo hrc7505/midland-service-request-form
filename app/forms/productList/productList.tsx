@@ -5,10 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import useFormContext from "@/app/context/formContext";
 import { createEmptyProduct } from "@/app/utils/createEmptyProduct";
-import { isProductValid } from "@/app/utils/isProductValid";
-import type { IProduct } from "@/app/interfaces/IFormState";
+import { CustomerType, type IProduct } from "@/app/interfaces/IFormState";
 import ProductCard from "@/app/forms/productList/productCard/productCard";
 import ProductFormFields from "@/app/forms/productList/fields/productFields";
+import FormValidators from "@/app/utils/formValidations";
 
 export default function ProductList() {
     const { formData, handleUpdate } = useFormContext();
@@ -27,10 +27,26 @@ export default function ProductList() {
 
     const isEditing = Boolean(editingProductId);
 
-    const isDraftValid = useMemo(
-        () => draftProduct ? isProductValid(draftProduct) : false,
-        [draftProduct]
-    );
+    const isDraftValid = useMemo(() => {
+        if (!draftProduct) return false;
+
+        const baseValid = FormValidators.hasText(draftProduct.appliance) &&
+            FormValidators.hasText(draftProduct.brand) &&
+            FormValidators.hasText(draftProduct.modelNumber);
+
+        if (!baseValid) return false;
+
+        if (formData.customerType === CustomerType.Builder) {
+            return FormValidators.hasText(draftProduct.unitNumber);
+        }
+
+        if (formData.customerType === CustomerType.Residential) {
+            return FormValidators.hasText(draftProduct.problem) &&
+                FormValidators.hasText(draftProduct.invoiceNumber);
+        }
+
+        return true;
+    }, [draftProduct, formData.customerType]);
 
     // ➕ Add new
     const handleAdd = useCallback(() => {
@@ -48,7 +64,7 @@ export default function ProductList() {
 
     // 💾 Save
     const handleSave = useCallback(() => {
-        if (!draftProduct || !isProductValid(draftProduct)) return;
+        if (!draftProduct || !isDraftValid) return;
 
         let updated: IProduct[];
 
@@ -65,7 +81,7 @@ export default function ProductList() {
         setDraftProduct(null);
         setEditingProductId(null);
         setIsAdding(false);
-    }, [draftProduct, isAdding, formData.products, handleUpdate]);
+    }, [draftProduct, isDraftValid, isAdding, formData.products, handleUpdate]);
 
     // ❌ Cancel (only for edit)
     const handleCancel = useCallback(() => {

@@ -48,18 +48,33 @@ export default function ProductFormFields({
 
     const applianceField = registerField(
         'appliance',
-        FormValidators.hasText(product.appliance),
+        FormValidators.hasText(product.appliance || ''),
         "Appliance is required."
+    );
+    const unitNumberField = registerField(
+        'unitNumber',
+        formData.customerType === CustomerType.Builder ? FormValidators.hasText(product.unitNumber || '') : true,
+        "Unit number is required for builders."
     );
     const brandField = registerField(
         'brand',
-        FormValidators.hasText(product.brand),
+        FormValidators.hasText(product.brand || ''),
         "Brand is required."
+    );
+    const modelNumberField = registerField(
+        'modelNumber',
+        FormValidators.hasText(product.modelNumber || ''),
+        "Model number is required."
     );
     const applianceProblemField = registerField(
         'problem',
-        FormValidators.hasText(product.problem),
-        "Problem description is required."
+        formData.customerType === CustomerType.Residential ? FormValidators.hasText(product.problem || '') : true,
+        "Problem description is required for residential."
+    );
+    const invoiceNumberField = registerField(
+        'invoiceNumber',
+        formData.customerType === CustomerType.Residential ? FormValidators.hasText(product.invoiceNumber || '') : true,
+        "Invoice number is required for residential."
     );
 
     /**
@@ -111,10 +126,11 @@ export default function ProductFormFields({
 
             {/* Builder only */}
             {formData.customerType === CustomerType.Builder && (
-                <Field label="Unit Number">
+                <Field label="Unit Number" required {...unitNumberField.fieldProps}>
                     <Input
                         value={product.unitNumber || ''}
                         onChange={handleInputChange('unitNumber')}
+                        {...unitNumberField.inputProps}
                     />
                 </Field>
             )}
@@ -148,10 +164,11 @@ export default function ProductFormFields({
             </Field>
 
             {/* Model */}
-            <Field label="Model Number">
+            <Field label="Model Number" required {...modelNumberField.fieldProps}>
                 <Input
                     value={product.modelNumber || ''}
                     onChange={handleInputChange('modelNumber')}
+                    {...modelNumberField.inputProps}
                 />
             </Field>
 
@@ -174,16 +191,17 @@ export default function ProductFormFields({
 
             {/* Residential only */}
             {formData.customerType === CustomerType.Residential && (
-                <Field label="Invoice Number">
+                <Field label="Invoice Number" required {...invoiceNumberField.fieldProps}>
                     <Input
                         value={product.invoiceNumber || ''}
                         onChange={handleInputChange('invoiceNumber')}
+                        {...invoiceNumberField.inputProps}
                     />
                 </Field>
             )}
 
             {/* Problem */}
-            <Field label="Appliance Problem" required {...applianceProblemField.fieldProps}>
+            <Field label="Appliance Problem" required={formData.customerType === CustomerType.Residential} {...applianceProblemField.fieldProps}>
                 <Textarea
                     resize="vertical"
                     value={product.problem}
