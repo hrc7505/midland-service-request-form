@@ -21,6 +21,7 @@ function getInitialFormData(): IFormState {
         email: '',
         phone: '',
         midlandRepName: '',
+        midlandAccount: '',
         address1: '',
         address2: '',
         city: '',
@@ -29,13 +30,9 @@ function getInitialFormData(): IFormState {
 
         // Site Info
         siteContact: '',
+        siteContactPhone: '',
+        siteContactEmail: '',
         projectName: '',
-        /*  siteAddress1: '',
-         siteAddress2: '',
-         siteCity: '',
-         siteProvince: '',
-         sitePostalCode: '',
-         cityAndProvince: '', */
 
         products: [],
     };
@@ -45,7 +42,13 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
     const [formData, setFormData] = useState(getInitialFormData);
 
     const handleUpdate = useCallback(<V = string,>(field: keyof IFormState, value: V) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData(prev => {
+            // Clear the form state if the customer type changes
+            if (field === 'customerType' && prev.customerType !== value) {
+                return { ...getInitialFormData(), customerType: value as unknown as CustomerType };
+            }
+            return { ...prev, [field]: value };
+        });
     }, []);
 
     const value = { formData, handleUpdate };
