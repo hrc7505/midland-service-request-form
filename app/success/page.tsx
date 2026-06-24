@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Body1, Title2, Body1Strong, Caption1 } from '@fluentui/react-components';
-import { CheckmarkCircleFilled } from '@fluentui/react-icons';
+import { Body1, Title2, Body1Strong, Caption1 } from "@fluentui/react-components";
+import { CheckmarkCircleFilled } from "@fluentui/react-icons";
 
-import useSuccessPageStyles from '@/app/success/useSuccessPageStyles';
+import useSuccessPageStyles from "@/app/success/useSuccessPageStyles";
 
 const SuccessPage = () => {
     const styles = useSuccessPageStyles();

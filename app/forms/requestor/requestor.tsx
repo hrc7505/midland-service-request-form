@@ -1,21 +1,19 @@
-'use client';
+"use client";
 import { useCallback, ChangeEvent } from "react";
-import { Input, Field, Label, Dropdown, Option, InputOnChangeData } from "@fluentui/react-components";
+import { Input, Field, Label, InputOnChangeData, mergeClasses } from "@fluentui/react-components";
 
 import IFormState, { CustomerType } from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
 import useFieldValidation from "@/app/hooks/useFieldValidation";
 import FormValidators from "@/app/utils/formValidations";
+import Address from "@/app/components/address/address";
 
 import useRequestorStyles from "@/app/forms/requestor/useRequestorStyles";
-
-const provinces = [
-    { value: '132190000', label: 'Alberta' },
-    { value: '132190001', label: 'British Columbia' },
-];
+import useCommonStyles from "@/app/styles/useCommonStyles";
 
 export default function RequestorInfo() {
     const styles = useRequestorStyles();
+    const commonStyles = useCommonStyles();
     const { formData: data, handleUpdate: onUpdate } = useFormContext();
     const { registerField } = useFieldValidation<IFormState>();
 
@@ -23,37 +21,39 @@ export default function RequestorInfo() {
         onUpdate(ev.target.name as keyof IFormState, d.value);
     }, [onUpdate]);
 
-    const fName = registerField('firstName', FormValidators.hasText(data.firstName), "First name is required.");
-    const lName = registerField('lastName', FormValidators.hasText(data.lastName), "Last name is required.");
-    const email = registerField('email', FormValidators.isValidEmailFormat(data.email), "Enter a valid email (e.g. name@domain.com).");
-    const phone = registerField('phone', FormValidators.hasText(data.phone), "Phone number is required.");
-    const address1 = registerField('address1', FormValidators.hasText(data.address1), "Address line 1 is required.");
-    const city = registerField('city', FormValidators.hasText(data.city), "City is required.");
-    const prov = registerField('province', FormValidators.hasText(data.province), "Province is required.");
-    const postalCode = registerField('postalCode', FormValidators.hasText(data.postalCode), "Postal code is required.");
+    const fName = registerField("firstName", FormValidators.hasText(data.firstName), "First name is required.");
+    const lName = registerField("lastName", FormValidators.hasText(data.lastName), "Last name is required.");
+    const email = registerField("email", FormValidators.hasText(data.email) && FormValidators.isValidEmailFormat(data.email), "Email is required and must be valid (e.g. name@domain.com).");
+    const phone = registerField("phone", FormValidators.hasText(data.phone), "Phone number is required.");
+    const address1 = registerField("address1", FormValidators.hasText(data.address1), "Address line 1 is required.");
+    const city = registerField("city", FormValidators.hasText(data.city), "City is required.");
+    const prov = registerField("province", FormValidators.hasText(data.province), "Province is required.");
+    const postalCode = registerField("postalCode", FormValidators.hasText(data.postalCode), "Postal code is required.");
     const midlandRepName = registerField(
-        'midlandRepName',
+        "midlandRepName",
         data.customerType === CustomerType.Builder ? FormValidators.hasText(data.midlandRepName) : true,
         "Midland rep name is required for builders."
     );
+    const midlandAccount = registerField(
+        "midlandAccount",
+        true,
+        ""
+    );
 
     return (
-        <div className={styles.grid}>
+        <div className={mergeClasses(commonStyles.flexColumn, styles.grid)}>
             {/* Name Row */}
-            <div>
-                <Label required weight="regular" size="medium">Name</Label>
-                <div className={styles.row}>
-                    <Field className={styles.col} hint="First Name" {...fName.fieldProps}>
-                        <Input name="firstName" value={data.firstName} onChange={handleInputChange} {...fName.inputProps} />
-                    </Field>
-                    <Field className={styles.col} hint="Last Name" {...lName.fieldProps}>
-                        <Input name="lastName" value={data.lastName} onChange={handleInputChange} {...lName.inputProps} />
-                    </Field>
-                </div>
+            <div className={mergeClasses(commonStyles.fullWidth, styles.row)}>
+                <Field label="First Name" required size="medium" className={mergeClasses(commonStyles.fullWidth, styles.col)} {...fName.fieldProps}>
+                    <Input name="firstName" value={data.firstName} onChange={handleInputChange} placeholder="First Name"{...fName.inputProps} />
+                </Field>
+                <Field label="Last Name" required size="medium" className={mergeClasses(commonStyles.fullWidth, styles.col)}  {...lName.fieldProps}>
+                    <Input name="lastName" value={data.lastName} onChange={handleInputChange} placeholder="Last Name" {...lName.inputProps} />
+                </Field>
             </div>
 
             {/* Email & Phone */}
-            <Field label="Email" size="medium" {...email.fieldProps}>
+            <Field label="Email" size="medium" required {...email.fieldProps}>
                 <Input type="email" name="email" value={data.email} onChange={handleInputChange} {...email.inputProps} />
             </Field>
 
@@ -62,49 +62,22 @@ export default function RequestorInfo() {
             </Field>
 
             {data.customerType === CustomerType.Builder
-                ? <Field label="Midland Rep Name" required size="medium" {...midlandRepName.fieldProps}>
-                    <Input type="text" name="midlandRepName" value={data.midlandRepName} onChange={handleInputChange}  {...midlandRepName.inputProps} />
-                </Field>
-                :
-                <>
-                    {/* Address Section */}
-                    <div>
-                        <Label required weight="regular" size="medium">Address</Label>
-                        <Field hint="Address Line 1" {...address1.fieldProps}>
-                            <Input name="address1" value={data.address1} onChange={handleInputChange} {...address1.inputProps} />
+                ? (
+                    <>
+                        <Field label="Midland Rep Name" required size="medium" {...midlandRepName.fieldProps}>
+                            <Input type="text" name="midlandRepName" value={data.midlandRepName} onChange={handleInputChange}  {...midlandRepName.inputProps} />
                         </Field>
-                    </div>
-                    <Field hint="Address Line 2">
-                        <Input name="address2" value={data.address2} onChange={handleInputChange} />
-                    </Field>
-
-                    {/* City, Province, Postal Code Row */}
-                    <div className={styles.row}>
-                        <Field className={styles.col} style={{ flex: 2 }} hint="City" required {...city.fieldProps}>
-                            <Input name="city" value={data.city} onChange={handleInputChange} {...city.inputProps} />
+                        <Field label="Midland Account #" size="medium" {...midlandAccount.fieldProps}>
+                            <Input type="text" name="midlandAccount" value={data.midlandAccount} onChange={handleInputChange}  {...midlandAccount.inputProps} />
                         </Field>
-                        <Field className={styles.col} style={{ flex: 2 }} hint="Province" required {...prov.fieldProps}>
-                            <Dropdown
-                                placeholder="Select Province"
-                                selectedOptions={data.province ? [data.province] : []}
-                                value={provinces.find(p => p.value === data.province)?.label || ''}
-                                onOptionSelect={(_, d) => onUpdate('province', d.optionValue as string)}
-                                aria-required="true"
-                                aria-label="Select Province"
-                                {...prov.inputProps}
-                            >
-                                {provinces.map(province => (
-                                    <Option key={province.value} value={province.value}>
-                                        {province.label}
-                                    </Option>
-                                ))}
-                            </Dropdown>
-                        </Field>
-                        <Field className={styles.col} style={{ flex: 1 }} hint="Postal Code" required {...postalCode.fieldProps}>
-                            <Input name="postalCode" value={data.postalCode} onChange={handleInputChange} {...postalCode.inputProps} />
-                        </Field>
-                    </div>
-                </>
+                    </>
+                )
+                : <Address
+                    data={data}
+                    handleInputChange={handleInputChange}
+                    onUpdate={onUpdate}
+                    validations={{ address1, city, province: prov, postalCode }}
+                />
             }
         </div>
     );

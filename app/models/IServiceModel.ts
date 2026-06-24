@@ -12,18 +12,23 @@ export default interface IServiceModel {
     midland_lastname: string;
     midland_email: string;
     midland_phone: string;
+    midland_repname: string;           // Text (Image 3)
+    midland_accountnumber: string;
+
+    // --- Common address fields ---
     midland_serviceaddress: string;    // Text
     midland_city: string;
     midland_province: string;          // Choice
     midland_postalcode: string;
-    midland_repname: string;           // Text (Image 3)
 
     // --- Step 3: Site Information (For Builders) ---
     midland_projectname?: string;
     midland_sitecontact?: string;
-    midland_unitnumber?: string;
+    midland_sitecontact_phonenumber?: string;
+    midland_sitecontact_email?: string;
 
     // --- Step 4: Product Information ---
+    midland_unitnumber?: string;
     midland_appliance?: string;        // Choice (Image 1)
     midland_brand: string;
     midland_modelnumber?: string;

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DismissRegular } from "@fluentui/react-icons";
@@ -19,21 +19,21 @@ import usePageStyles from "@/app/usePageStyles";
 const ServiceRequestForm = () => {
   const styles = usePageStyles();
   const { formData } = useFormContext();
-  const [isPending, startTranstion] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState<string>();
 
   const steps = useMemo<IWizardStep[]>(() => {
     const listOfSteps: IWizardStep[] = [
       {
-        id: 'selection',
-        label: 'Customer Type',
+        id: "selection",
+        label: "Customer Type",
         component: <CustomerTypeCompo />,
         isValid: true,
       },
       {
-        id: 'requestor',
-        label: 'Requestor Information',
+        id: "requestor",
+        label: "Requestor Information",
         component: <RequestorInfo />,
         isValid: FormValidators.isRequestorValid(formData),
       },
@@ -41,16 +41,16 @@ const ServiceRequestForm = () => {
 
     if (formData.customerType === CustomerType.Builder) {
       listOfSteps.push({
-        id: 'site',
-        label: 'Site Information',
+        id: "site",
+        label: "Site Information",
         component: <Site />,
         isValid: FormValidators.isSiteValid(formData),
       });
     }
 
     listOfSteps.push({
-      id: 'product',
-      label: 'Appliances',
+      id: "product",
+      label: "Appliances",
       component: <ProductList />,
       isValid: FormValidators.areProductsValid(formData),
     });
@@ -58,12 +58,12 @@ const ServiceRequestForm = () => {
   }, [formData]);
 
   const handleFinalSave = useCallback(async () => {
-    startTranstion(async () => {
+    startTransition(async () => {
       try {
-        const response = await fetch('/api/incidents', {
-          method: 'POST',
+        const response = await fetch("/api/incidents", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
         });
@@ -72,7 +72,7 @@ const ServiceRequestForm = () => {
 
         if (!response.ok) {
           // Logic for handling the production errors we set up in the API
-          throw new Error(result.error || 'Failed to submit request');
+          throw new Error(result.error || "Failed to submit request");
         }
 
         router.push("/success");
@@ -80,7 +80,7 @@ const ServiceRequestForm = () => {
         if (error instanceof Error) {
           setErrorMsg(error.message);
         } else {
-          setErrorMsg('Failed to submit request');
+          setErrorMsg("Failed to submit request");
         }
       }
     });

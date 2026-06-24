@@ -1,6 +1,6 @@
 export enum CustomerType {
-    Residential = '132190000',
-    Builder = '132190001'
+    Residential = "132190000",
+    Builder = "132190001"
 }
 
 export interface IProduct {
@@ -32,31 +32,20 @@ export default interface IFormState {
     province: string;
     postalCode: string;
     midlandRepName: string;
+    midlandAccount: string;
 
     // --- Step 3: Site Information (Optional for Residential) ---
+    projectName: string;
     siteContact?: string;
-    projectName?: string;
-    /* siteAddress1?: string;
-    siteAddress2?: string;
-    siteCity?: string;
-    siteProvince?: string;
-    sitePostalCode?: string;
-    cityAndProvince?: string; */
-    
-    
+    siteContactPhone?: string;
+    siteContactEmail?: string;
+
+
     // --- Step 4: Product Information ---
-    /*  brand: string;
-    unitNumber?: string;
-     modelNumber?: string;
-     serialNumber?: string;
-     deliveryDate?: string; // Stored as ISO string "YYYY-MM-DD"
-     invoiceNumber?: string;
-     problem: string;
-     appliance?: string; */
     products: IProduct[];
 
     // File Handling
-   // photos?: File[];
+    // photos?: File[];
 
-   // additionalNotes?: string;
+    // additionalNotes?: string;
 }

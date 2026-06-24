@@ -1,8 +1,13 @@
 import { makeStyles } from "@fluentui/react-components";
 
 const useRequestorStyles = makeStyles({
-    grid: { display: 'flex', flexDirection: 'column', gap: '10px' },
-    row: { display: 'flex', gap: '16px', width: '100%' },
+    grid: { gap: "10px" },
+    row: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        alignItems: "start",
+        gap: "10px",
+    },
     col: { flex: 1 },
 });
 

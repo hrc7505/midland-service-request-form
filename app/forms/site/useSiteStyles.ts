@@ -1,9 +1,10 @@
 import { makeStyles } from "@fluentui/react-components";
 
+/**
+ * Defines CSS-in-JS styles for the Site information form component using Griffel.
+ */
 const useSiteStyles = makeStyles({
-    grid: { display: 'flex', flexDirection: 'column', gap: '10px' },
-    row: { display: 'flex', gap: '16px', width: '100%' },
-    col: { flex: 1 },
+    grid: { gap: "10px" },
 });
 
 export default useSiteStyles;
