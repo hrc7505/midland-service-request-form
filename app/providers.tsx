@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { FluentProvider, webLightTheme, createDOMRenderer, RendererProvider, renderToStyleElements } from '@fluentui/react-components';
-import { useServerInsertedHTML } from 'next/navigation';
-import { useMemo } from 'react';
+import { FluentProvider, webLightTheme, createDOMRenderer, RendererProvider, renderToStyleElements } from "@fluentui/react-components";
+import { useServerInsertedHTML } from "next/navigation";
+import { useMemo } from "react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
     const renderer = useMemo(() => createDOMRenderer(), []);

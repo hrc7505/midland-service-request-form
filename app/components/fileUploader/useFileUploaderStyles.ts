@@ -4,23 +4,13 @@ import { makeStyles, tokens } from "@fluentui/react-components";
  * Component styles
  */
 const useFileUploaderStyles = makeStyles({
-    container: {
-        display: 'flex',
-        flexDirection: 'column',
-    },
-
     dropZone: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '32px',
+        padding: "32px",
         border: `2px dashed ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
         backgroundColor: tokens.colorNeutralBackground2,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        gap: '8px',
+        cursor: "pointer",
+        transition: "all 0.2s ease",
     },
 
     dropZoneActive: {
@@ -30,7 +20,7 @@ const useFileUploaderStyles = makeStyles({
 
     dropZoneDisabled: {
         opacity: 0.6,
-        cursor: 'not-allowed',
+        cursor: "not-allowed",
     },
 
     dropZoneError: {
@@ -40,67 +30,64 @@ const useFileUploaderStyles = makeStyles({
 
     shake: {
         animationName: {
-            '0%': { transform: 'translateX(0)' },
-            '25%': { transform: 'translateX(-6px)' },
-            '50%': { transform: 'translateX(6px)' },
-            '75%': { transform: 'translateX(-4px)' },
-            '100%': { transform: 'translateX(0)' },
+            "0%": { transform: "translateX(0)" },
+            "25%": { transform: "translateX(-6px)" },
+            "50%": { transform: "translateX(6px)" },
+            "75%": { transform: "translateX(-4px)" },
+            "100%": { transform: "translateX(0)" },
         },
-        animationDuration: '0.3s',
+        animationDuration: "0.3s",
     },
 
     fileGrid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-        gap: '12px',
-        marginTop: '16px',
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+        marginTop: "16px",
     },
 
     fileCard: {
-        position: 'relative',
+        position: "relative",
         borderRadius: tokens.borderRadiusMedium,
-        overflow: 'hidden',
+        overflow: "hidden",
         border: `1px solid ${tokens.colorNeutralStroke1}`,
         backgroundColor: tokens.colorNeutralBackground1,
     },
 
     thumbnail: {
-        width: '100%',
-        height: '100px',
-        objectFit: 'cover',
+        width: "100%",
+        height: "100px",
+        objectFit: "cover",
     },
 
     fileFooter: {
-        padding: '6px 8px',
+        padding: "6px 8px",
     },
 
     fileName: {
-        display: 'block',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
+        display: "block",
         fontSize: tokens.fontSizeBase200,
-    },
+    },    
 
     removeBtn: {
-        position: 'absolute',
-        top: '4px',
-        right: '4px',
+        position: "absolute",
+        top: "4px",
+        right: "4px",
         backgroundColor: tokens.colorNeutralBackground1,
     },
 
     hiddenInput: {
-        display: 'none',
+        display: "none",
     },
 
     srOnly: {
-        position: 'absolute',
-        width: '1px',
-        height: '1px',
+        position: "absolute",
+        width: "1px",
+        height: "1px",
         padding: 0,
-        margin: '-1px',
-        overflow: 'hidden',
-        clip: 'rect(0,0,0,0)',
-        whiteSpace: 'nowrap',
+        margin: "-1px",
+        overflow: "hidden",
+        clip: "rect(0,0,0,0)",
+        whiteSpace: "nowrap",
         border: 0,
     },
 });

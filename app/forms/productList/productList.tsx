@@ -1,52 +1,56 @@
-'use client';
+"use client";
 
-import { Button } from "@fluentui/react-components";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, mergeClasses } from "@fluentui/react-components";
+import { useCallback, useMemo, useState } from "react";
 
 import useFormContext from "@/app/context/formContext";
-import { createEmptyProduct } from "@/app/utils/createEmptyProduct";
+import createEmptyProduct from "@/app/utils/createEmptyProduct";
 import { CustomerType, type IProduct } from "@/app/interfaces/IFormState";
 import ProductCard from "@/app/forms/productList/productCard/productCard";
 import ProductFormFields from "@/app/forms/productList/fields/productFields";
 import FormValidators from "@/app/utils/formValidations";
 
+import useCommonStyles from "@/app/styles/useCommonStyles";
+
+import useProductListStyles from "@/app/forms/productList/useProductListStyles";
+
+/**
+ * Component that orchestrates the lifecycle of product drafts—handling the addition,
+ * editing, removal, and saving of products into the centralized form state.
+ */
 export default function ProductList() {
     const { formData, handleUpdate } = useFormContext();
+    const styles = useProductListStyles();
+    const commonStyles = useCommonStyles();
 
     const [draftProduct, setDraftProduct] = useState<IProduct | null>(null);
     const [editingProductId, setEditingProductId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
 
-    // ✅ Initial load → show only form (no products yet)
-    useEffect(() => {
-        if (formData.products.length === 0 && !draftProduct) {
-            setDraftProduct(createEmptyProduct());
-            setIsAdding(true);
-        }
-    }, [formData.products, draftProduct]);
-
     const isEditing = Boolean(editingProductId);
+    const isEffectivelyAdding = !isEditing && !isAdding && formData.products.length === 0;
 
     const isDraftValid = useMemo(() => {
-        if (!draftProduct) return false;
+        const productToValidate = draftProduct ?? (isEffectivelyAdding ? createEmptyProduct() : null);
+        if (!productToValidate) return false;
 
-        const baseValid = FormValidators.hasText(draftProduct.appliance) &&
-            FormValidators.hasText(draftProduct.brand) &&
-            FormValidators.hasText(draftProduct.modelNumber);
+        const baseValid = FormValidators.hasText(productToValidate.appliance) &&
+            FormValidators.hasText(productToValidate.brand) &&
+            FormValidators.hasText(productToValidate.modelNumber);
 
         if (!baseValid) return false;
 
         if (formData.customerType === CustomerType.Builder) {
-            return FormValidators.hasText(draftProduct.unitNumber);
+            return FormValidators.hasText(productToValidate.unitNumber);
         }
 
         if (formData.customerType === CustomerType.Residential) {
-            return FormValidators.hasText(draftProduct.problem) &&
-                FormValidators.hasText(draftProduct.invoiceNumber);
+            return FormValidators.hasText(productToValidate.problem) &&
+                FormValidators.hasText(productToValidate.invoiceNumber);
         }
 
-        return true;
-    }, [draftProduct, formData.customerType]);
+        return false;
+    }, [draftProduct, isEffectivelyAdding, formData.customerType]);
 
     // ➕ Add new
     const handleAdd = useCallback(() => {
@@ -64,24 +68,25 @@ export default function ProductList() {
 
     // 💾 Save
     const handleSave = useCallback(() => {
-        if (!draftProduct || !isDraftValid) return;
+        const productToSave = draftProduct ?? (isEffectivelyAdding ? createEmptyProduct() : null);
+        if (!productToSave || !isDraftValid) return;
 
         let updated: IProduct[];
 
-        if (isAdding) {
-            updated = [...formData.products, draftProduct];
+        if (isAdding || isEffectivelyAdding) {
+            updated = [...formData.products, productToSave];
         } else {
             updated = formData.products.map(p =>
-                p.id === draftProduct.id ? draftProduct : p
+                p.id === productToSave.id ? productToSave : p
             );
         }
 
-        handleUpdate('products', updated);
+        handleUpdate("products", updated);
 
         setDraftProduct(null);
         setEditingProductId(null);
         setIsAdding(false);
-    }, [draftProduct, isDraftValid, isAdding, formData.products, handleUpdate]);
+    }, [draftProduct, isDraftValid, isAdding, isEffectivelyAdding, formData.products, handleUpdate]);
 
     // ❌ Cancel (only for edit)
     const handleCancel = useCallback(() => {
@@ -93,7 +98,7 @@ export default function ProductList() {
     // 🗑 Delete
     const handleRemove = useCallback((id: string) => {
         handleUpdate(
-            'products',
+            "products",
             formData.products.filter(p => p.id !== id)
         );
     }, [formData.products, handleUpdate]);
@@ -101,47 +106,47 @@ export default function ProductList() {
     // ✍️ Draft change
     const handleChange = useCallback(
         (id: string, key: keyof IProduct, value: unknown) => {
-            if (!draftProduct) return;
-
-            setDraftProduct({
-                ...draftProduct,
-                [key]: value,
-            });
+            setDraftProduct(prev => ({
+                ...(prev ?? (isEffectivelyAdding ? createEmptyProduct() : null)!),
+                [key]: value
+            }));
         },
-        [draftProduct]
+        [isEffectivelyAdding]
     );
 
-    const isFormVisible = isAdding || isEditing;
+    const isFormVisible = isAdding || isEditing || isEffectivelyAdding;
+    const productInForm = draftProduct ?? (isEffectivelyAdding ? createEmptyProduct() : null);
 
     return (
         <div>
 
             {/* ✅ FORM ONLY (Add or Edit Mode) */}
-            {isFormVisible && draftProduct && (
-                <div style={{ marginBottom: 24 }}>
-                    <ProductFormFields
-                        product={draftProduct}
-                        onChange={handleChange}
-                    />
+            {
+                isFormVisible && productInForm && (
+                    <div>
+                        <ProductFormFields
+                            product={productInForm}
+                            onChange={handleChange}
+                        />
 
-                    <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-                        <Button
-                            appearance="primary"
-                            onClick={handleSave}
-                            disabled={!isDraftValid}
-                        >
-                            Save
-                        </Button>
-
-                        {/* ✅ Cancel only in edit mode */}
-                        {isEditing && (
-                            <Button onClick={handleCancel}>
-                                Cancel
+                        <div className={mergeClasses(commonStyles.flexRow, commonStyles.gap2, styles.actionContainer)}>
+                            <Button
+                                appearance="primary"
+                                onClick={handleSave}
+                                disabled={!isDraftValid}
+                            >
+                                Save
                             </Button>
-                        )}
+
+                            {/* ✅ Cancel only in edit mode */}
+                            {(isEditing || (isAdding && formData.products.length > 0)) && (
+                                <Button onClick={handleCancel}>
+                                    Cancel
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
             {/* ✅ SHOW CARDS ONLY WHEN NOT ADDING/EDITING */}
             {!isFormVisible && formData.products.length > 0 && (
@@ -159,11 +164,8 @@ export default function ProductList() {
 
             {/* ✅ ADD BUTTON (only when not editing/adding) */}
             {!isFormVisible && formData.products.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                    <Button
-                        appearance="primary"
-                        onClick={handleAdd}
-                    >
+                <div className={styles.addBtnWrapper}>
+                    <Button appearance="primary" onClick={handleAdd}>
                         + Add Appliance
                     </Button>
                 </div>

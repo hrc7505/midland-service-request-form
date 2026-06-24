@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Card } from "@fluentui/react-components";
 import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
@@ -13,13 +13,13 @@ interface Props {
 }
 
 const applianceMap: Record<string, string> = {
-    '132190000': 'Refrigerator',
-    '132190001': 'Dishwasher',
-    '132190002': 'Washer',
-    '132190003': 'Dryer',
-    '132190004': 'Range',
-    '132190005': 'Oven',
-    '132190006': 'Microwave',
+    "132190000": "Refrigerator",
+    "132190001": "Dishwasher",
+    "132190002": "Washer",
+    "132190003": "Dryer",
+    "132190004": "Range",
+    "132190005": "Oven",
+    "132190006": "Microwave",
 };
 
 export default function ProductCard({
@@ -29,12 +29,12 @@ export default function ProductCard({
 }: Props) {
     const styles = useProductCardStyles();
 
-    const title = applianceMap[product.appliance || ''] || 'Appliance';
+    const title = applianceMap[product.appliance || ""] || "Appliance";
 
     const summary = [
         product.brand,
         product.modelNumber && `Model ${product.modelNumber}`,
-    ].filter(Boolean).join(' • ');
+    ].filter(Boolean).join(" • ");
 
     return (
         <Card className={styles.card}>
@@ -49,6 +49,7 @@ export default function ProductCard({
                 <div className={styles.actions}>
                     <button
                         className={styles.actionBtn}
+                        aria-label={`Edit ${title}`}
                         onClick={() => onEdit(product)}
                     >
                         <EditRegular />
@@ -56,6 +57,7 @@ export default function ProductCard({
 
                     <button
                         className={styles.actionBtn}
+                        aria-label={`Delete ${title}`}
                         onClick={() => onRemove(product.id)}
                     >
                         <DeleteRegular />

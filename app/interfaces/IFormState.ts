@@ -1,6 +1,6 @@
 export enum CustomerType {
-    Residential = '132190000',
-    Builder = '132190001'
+    Residential = "132190000",
+    Builder = "132190001"
 }
 
 export interface IProduct {

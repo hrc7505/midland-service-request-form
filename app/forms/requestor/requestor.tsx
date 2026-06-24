@@ -1,6 +1,6 @@
-'use client';
+"use client";
 import { useCallback, ChangeEvent } from "react";
-import { Input, Field, Label, InputOnChangeData } from "@fluentui/react-components";
+import { Input, Field, Label, InputOnChangeData, mergeClasses } from "@fluentui/react-components";
 
 import IFormState, { CustomerType } from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";
@@ -9,9 +9,11 @@ import FormValidators from "@/app/utils/formValidations";
 import Address from "@/app/components/address/address";
 
 import useRequestorStyles from "@/app/forms/requestor/useRequestorStyles";
+import useCommonStyles from "@/app/styles/useCommonStyles";
 
 export default function RequestorInfo() {
     const styles = useRequestorStyles();
+    const commonStyles = useCommonStyles();
     const { formData: data, handleUpdate: onUpdate } = useFormContext();
     const { registerField } = useFieldValidation<IFormState>();
 
@@ -19,38 +21,35 @@ export default function RequestorInfo() {
         onUpdate(ev.target.name as keyof IFormState, d.value);
     }, [onUpdate]);
 
-    const fName = registerField('firstName', FormValidators.hasText(data.firstName), "First name is required.");
-    const lName = registerField('lastName', FormValidators.hasText(data.lastName), "Last name is required.");
-    const email = registerField('email', FormValidators.hasText(data.email) && FormValidators.isValidEmailFormat(data.email), "Email is required and must be valid (e.g. name@domain.com).");
-    const phone = registerField('phone', FormValidators.hasText(data.phone), "Phone number is required.");
-    const address1 = registerField('address1', FormValidators.hasText(data.address1), "Address line 1 is required.");
-    const city = registerField('city', FormValidators.hasText(data.city), "City is required.");
-    const prov = registerField('province', FormValidators.hasText(data.province), "Province is required.");
-    const postalCode = registerField('postalCode', FormValidators.hasText(data.postalCode), "Postal code is required.");
+    const fName = registerField("firstName", FormValidators.hasText(data.firstName), "First name is required.");
+    const lName = registerField("lastName", FormValidators.hasText(data.lastName), "Last name is required.");
+    const email = registerField("email", FormValidators.hasText(data.email) && FormValidators.isValidEmailFormat(data.email), "Email is required and must be valid (e.g. name@domain.com).");
+    const phone = registerField("phone", FormValidators.hasText(data.phone), "Phone number is required.");
+    const address1 = registerField("address1", FormValidators.hasText(data.address1), "Address line 1 is required.");
+    const city = registerField("city", FormValidators.hasText(data.city), "City is required.");
+    const prov = registerField("province", FormValidators.hasText(data.province), "Province is required.");
+    const postalCode = registerField("postalCode", FormValidators.hasText(data.postalCode), "Postal code is required.");
     const midlandRepName = registerField(
-        'midlandRepName',
+        "midlandRepName",
         data.customerType === CustomerType.Builder ? FormValidators.hasText(data.midlandRepName) : true,
         "Midland rep name is required for builders."
     );
     const midlandAccount = registerField(
-        'midlandAccount',
-        data.customerType === CustomerType.Builder ? FormValidators.hasText(data.midlandAccount || '') : true,
-        "Midland account number is required for builders."
+        "midlandAccount",
+        true,
+        ""
     );
 
     return (
-        <div className={styles.grid}>
+        <div className={mergeClasses(commonStyles.flexColumn, styles.grid)}>
             {/* Name Row */}
-            <div>
-                <Label required weight="regular" size="medium">Name</Label>
-                <div className={styles.row}>
-                    <Field className={styles.col} hint="First Name" {...fName.fieldProps}>
-                        <Input name="firstName" value={data.firstName} onChange={handleInputChange} {...fName.inputProps} />
-                    </Field>
-                    <Field className={styles.col} hint="Last Name" {...lName.fieldProps}>
-                        <Input name="lastName" value={data.lastName} onChange={handleInputChange} {...lName.inputProps} />
-                    </Field>
-                </div>
+            <div className={mergeClasses(commonStyles.fullWidth, styles.row)}>
+                <Field label="First Name" required size="medium" className={mergeClasses(commonStyles.fullWidth, styles.col)} {...fName.fieldProps}>
+                    <Input name="firstName" value={data.firstName} onChange={handleInputChange} placeholder="First Name"{...fName.inputProps} />
+                </Field>
+                <Field label="Last Name" required size="medium" className={mergeClasses(commonStyles.fullWidth, styles.col)}  {...lName.fieldProps}>
+                    <Input name="lastName" value={data.lastName} onChange={handleInputChange} placeholder="Last Name" {...lName.inputProps} />
+                </Field>
             </div>
 
             {/* Email & Phone */}
@@ -68,13 +67,12 @@ export default function RequestorInfo() {
                         <Field label="Midland Rep Name" required size="medium" {...midlandRepName.fieldProps}>
                             <Input type="text" name="midlandRepName" value={data.midlandRepName} onChange={handleInputChange}  {...midlandRepName.inputProps} />
                         </Field>
-                        <Field label="Midland Account #" required size="medium" {...midlandAccount.fieldProps}>
+                        <Field label="Midland Account #" size="medium" {...midlandAccount.fieldProps}>
                             <Input type="text" name="midlandAccount" value={data.midlandAccount} onChange={handleInputChange}  {...midlandAccount.inputProps} />
                         </Field>
                     </>
                 )
-                :
-                <Address
+                : <Address
                     data={data}
                     handleInputChange={handleInputChange}
                     onUpdate={onUpdate}

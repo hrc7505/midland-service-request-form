@@ -1,12 +1,12 @@
-// app/utils/formValidators.ts
 import IFormState, { CustomerType } from "@/app/interfaces/IFormState";
+import isProductValid from "@/app/utils/isProductValid";
 
 export default class FormValidators {
     /**
-     * Helper to ensure a string exists and isn't just whitespace.
+     * Helper to ensure a string exists and isn"t just whitespace.
      */
-    static hasText(value?: string): boolean {
-        return typeof value === 'string' && value.trim().length > 0;
+    static hasText(value?: string): value is string {
+        return typeof value === "string" && value.trim().length > 0;
     }
 
     /**
@@ -36,8 +36,18 @@ export default class FormValidators {
      * Validates Step 3: Site Information (Builders Only)
      */
     static isSiteValid(data: IFormState): boolean {
-        // Site is currently optional, but if you make project name required later:
-        // return this.hasText(data.projectName);
+        if (data.customerType === CustomerType.Builder) {
+            if (!this.hasText(data.projectName) || !this.hasText(data.address1)) {
+                return false;
+            }
+
+            // If they specified a different site contact
+            if (this.hasText(data.siteContact)) {
+                if (!this.hasText(data.siteContactPhone) || !this.isValidEmailFormat(data.siteContactEmail)) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -46,13 +56,13 @@ export default class FormValidators {
      */
     static areProductsValid(data: IFormState): boolean {
         // Must have at least one product completely saved
-        return Array.isArray(data.products) && data.products.length > 0;
+        return Array.isArray(data.products) && data.products.some(p => p && isProductValid(p, data.customerType));
     }
 
     /**
      * Optional: Basic email format validation
      */
-    static isValidEmailFormat(email: string): boolean {
+    static isValidEmailFormat(email?: string): boolean {
         if (!this.hasText(email)) return false;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email.trim());
