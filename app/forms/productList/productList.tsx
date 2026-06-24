@@ -49,7 +49,7 @@ export default function ProductList() {
                 FormValidators.hasText(productToValidate.invoiceNumber);
         }
 
-            return false;
+        return false;
     }, [draftProduct, isEffectivelyAdding, formData.customerType]);
 
     // ➕ Add new
