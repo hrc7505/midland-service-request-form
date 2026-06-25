@@ -47,7 +47,6 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
             if (field === "customerType" && prev.customerType !== value) {
                 return { ...getInitialFormData(), customerType: value as unknown as CustomerType };
             }
-
             return { ...prev, [field]: value };
         });
     }, []);

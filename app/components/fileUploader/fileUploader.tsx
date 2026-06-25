@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useMemo, useId, useEffect } from "react";
-import { Text, Button, mergeClasses, Image, Tooltip } from "@fluentui/react-components";
-import { ArrowUploadRegular, DocumentRegular, DismissRegular } from "@fluentui/react-icons";
+import { Text, Button, mergeClasses, Image, Tooltip, Spinner } from "@fluentui/react-components";
+import { ArrowUploadRegular, DocumentRegular, DismissRegular, WarningRegular, CheckmarkCircleFilled, ErrorCircleFilled } from "@fluentui/react-icons";
 
 import FileUploaderProps from "@/app/components/fileUploader/interfaces/IFileUploaderProps";
+import { UploadStatus } from "@/app/interfaces/IFormState";
 
 import useFileUploaderStyles from "@/app/components/fileUploader/useFileUploaderStyles";
 import useCommonStyles from "@/app/styles/useCommonStyles";
@@ -22,6 +23,7 @@ import useCommonStyles from "@/app/styles/useCommonStyles";
  */
 const FileUploader: React.FC<FileUploaderProps> = ({
     files,
+    uploadedFiles = [],
     onChange,
     accept = "image/*",
     multiple = true,
@@ -256,28 +258,68 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             <div className={mergeClasses(styles.fileGrid, commonStyles.gap3)}>
                 {files.map((file, index) => {
                     const preview = previews[index]?.url;
+                    const key = getFileKey(file);
+                    const metadata = uploadedFiles.find(u => u.fileKey === key);
+                    const status = metadata?.status || UploadStatus.Success;
+                    const isUploading = status === UploadStatus.Uploading || status === UploadStatus.Pending;
+                    const isDeleting = status === UploadStatus.Deleting;
+                    const isError = status === UploadStatus.Error;
+                    const isSuccess = status === UploadStatus.Success;
 
                     return (
-                        <div key={getFileKey(file)} className={styles.fileCard}>
-                            <Tooltip content={file.name} relationship="label">
+                        <div key={key} className={styles.fileCard}>
+                            <Tooltip content={isError ? (metadata?.errorMsg || "Upload failed") : file.name} relationship="label">
                                 <div>
-                                    {preview ? (
-                                        <Image
-                                            src={preview}
-                                            alt={file.name}
-                                            className={styles.thumbnail}
-                                        />
-                                    ) : (
-                                        <div className={styles.thumbnail}>
-                                            <DocumentRegular />
-                                        </div>
-                                    )}
+                                    <div className={styles.thumbnailContainer}>
+                                        {preview ? (
+                                            <Image
+                                                src={preview}
+                                                alt={file.name}
+                                                className={styles.thumbnail}
+                                            />
+                                        ) : (
+                                            <div className={styles.thumbnail}>
+                                                <DocumentRegular />
+                                            </div>
+                                        )}
+
+                                        {/* Uploading overlay */}
+                                        {isUploading && (
+                                            <div className={mergeClasses(styles.overlay, commonStyles.flexColumn, commonStyles.flexCenter)}>
+                                                <Spinner size="medium" appearance="inverted" />
+                                                <Text size={100} weight="semibold" className={styles.overlayText}>Uploading...</Text>
+                                            </div>
+                                        )}
+
+                                        {/* Deleting overlay */}
+                                        {isDeleting && (
+                                            <div className={mergeClasses(styles.overlay, commonStyles.flexColumn, commonStyles.flexCenter)}>
+                                                <Spinner size="medium" appearance="inverted" />
+                                                <Text size={100} weight="semibold" className={styles.overlayText}>Deleting...</Text>
+                                            </div>
+                                        )}
+
+                                        {/* Error badge */}
+                                        {isError && (
+                                            <div className={styles.errorBadge}>
+                                                <ErrorCircleFilled fontSize={18} />
+                                            </div>
+                                        )}
+
+                                        {/* Success badge */}
+                                        {isSuccess && (
+                                            <div className={styles.successBadge}>
+                                                <CheckmarkCircleFilled fontSize={18} />
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <Button
                                         className={styles.removeBtn}
                                         appearance="subtle"
                                         icon={<DismissRegular />}
                                         size="small"
+                                        disabled={isUploading || isDeleting}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onChange(files.filter((_, i) => i !== index));

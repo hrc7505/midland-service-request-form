@@ -4,4 +4,5 @@ export default interface IWizardProps {
     saving: boolean;
     steps: IWizardStep[];
     onSave: () => void;
+    disableNav?: boolean;
 }

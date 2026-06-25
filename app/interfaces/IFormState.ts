@@ -1,6 +1,23 @@
 export enum CustomerType {
-    Residential = "132190000",
-    Builder = "132190001"
+    Residential = "Individual",
+    Builder = "Builder"
+}
+
+export enum UploadStatus {
+    Pending = "pending",
+    Uploading = "uploading",
+    Success = "success",
+    Error = "error",
+    Deleting = "deleting",
+}
+
+export interface IProductFile {
+    fileKey: string; // name-size-lastmodified
+    fileId?: string; // GUID from backend
+    fileName: string;
+    contentType: string;
+    status: UploadStatus;
+    errorMsg?: string;
 }
 
 export interface IProduct {
@@ -15,6 +32,8 @@ export interface IProduct {
     problem: string;
     photos?: File[];
     additionalNotes?: string;
+    uploadSessionId?: string;
+    uploadedFiles?: IProductFile[];
 }
 
 export default interface IFormState {
@@ -43,9 +62,4 @@ export default interface IFormState {
 
     // --- Step 4: Product Information ---
     products: IProduct[];
-
-    // File Handling
-    // photos?: File[];
-
-    // additionalNotes?: string;
 }

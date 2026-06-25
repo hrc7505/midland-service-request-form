@@ -59,6 +59,13 @@ const useFileUploaderStyles = makeStyles({
         objectFit: "cover",
     },
 
+    thumbnailContainer: {
+        position: "relative",
+        width: "100%",
+        height: "100px",
+        overflow: "hidden",
+    },
+
     fileFooter: {
         padding: "6px 8px",
     },
@@ -77,6 +84,45 @@ const useFileUploaderStyles = makeStyles({
 
     hiddenInput: {
         display: "none",
+    },
+
+    overlay: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        color: tokens.colorNeutralForegroundInverted,
+        backdropFilter: "blur(2px)",
+        transition: "all 0.3s ease",
+        gap: "4px",
+    },
+
+    overlayText: {
+        color: tokens.colorNeutralForegroundInverted,
+    },
+
+    errorBadge: {
+        position: "absolute",
+        bottom: "4px",
+        left: "4px",
+        color: tokens.colorPaletteRedForeground1,
+        backgroundColor: tokens.colorNeutralBackground1,
+        borderRadius: "50%",
+        display: "flex",
+        boxShadow: tokens.shadow2,
+    },
+
+    successBadge: {
+        position: "absolute",
+        bottom: "4px",
+        left: "4px",
+        color: tokens.colorPaletteGreenForeground1,
+        backgroundColor: tokens.colorNeutralBackground1,
+        borderRadius: "50%",
+        display: "flex",
+        boxShadow: tokens.shadow2,
     },
 
     srOnly: {

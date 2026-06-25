@@ -17,64 +17,74 @@ import FileUploader from "@/app/components/fileUploader/fileUploader";
 import useFieldValidation from "@/app/hooks/useFieldValidation";
 import type { UpdateProductFn } from "@/app/forms/productList/types/types";
 import FormValidators from "@/app/utils/formValidations";
+import { useProductUpload } from "@/app/hooks/useProductUpload";
 
 import useProductFormFieldStyles from "@/app/forms/productList/fields/useProductFormFieldStyles";
 
 interface ProductFormFieldsProps {
     product: IProduct;
     onChange: UpdateProductFn;
+    showErrors?: boolean;
 }
 
 /**
  * Appliance dropdown options
  */
 const APPLIANCES = [
-    { label: "Refrigerator", value: "132190000" },
-    { label: "Dishwasher", value: "132190001" },
-    { label: "Washer", value: "132190002" },
-    { label: "Dryer", value: "132190003" },
-    { label: "Range", value: "132190004" },
-    { label: "Oven", value: "132190005" },
-    { label: "Microwave", value: "132190006" },
+    { label: "Refrigerator", value: "Refrigerator" },
+    { label: "Dishwasher", value: "Dishwasher" },
+    { label: "Washer", value: "Washer" },
+    { label: "Dryer", value: "Dryer" },
+    { label: "Range", value: "Range" },
+    { label: "Oven", value: "Oven" },
+    { label: "Microwave", value: "Microwave" },
 ] as const;
 
 export default function ProductFormFields({
     product,
     onChange,
+    showErrors,
 }: ProductFormFieldsProps) {
     const styles = useProductFormFieldStyles();
     const { formData } = useFormContext();
     const { registerField } = useFieldValidation<IProduct>();
+    const { handleFilesChange } = useProductUpload(product, onChange);
 
     const applianceField = registerField(
         "appliance",
         FormValidators.hasText(product.appliance || ""),
-        "Appliance is required."
+        "Appliance is required.",
+        showErrors
     );
     const unitNumberField = registerField(
         "unitNumber",
         formData.customerType === CustomerType.Builder ? FormValidators.hasText(product.unitNumber || "") : true,
-        "Unit number is required for builders."
+        "Unit number is required for builders.",
+        showErrors
     );
     const brandField = registerField(
         "brand",
         FormValidators.hasText(product.brand || ""),
-        "Brand is required."
+        "Brand is required.",
+        showErrors
     );
     const modelNumberField = registerField(
         "modelNumber",
         FormValidators.hasText(product.modelNumber || ""),
-        "Model number is required."
+        "Model number is required.",
+        showErrors
     );
     const applianceProblemField = registerField(
         "problem",
         formData.customerType === CustomerType.Residential ? FormValidators.hasText(product.problem || "") : true,
-        "Problem description is required for residential."
+        "Problem description is required for residential.",
+        showErrors
     );
     const invoiceNumberField = registerField(
         "invoiceNumber",
         formData.customerType === CustomerType.Residential ? FormValidators.hasText(product.invoiceNumber || "") : true,
-        "Invoice number is required for residential."
+        "Invoice number is required for residential.",
+        showErrors
     );
 
     /**
@@ -116,9 +126,9 @@ export default function ProductFormFields({
      */
     const handlePhotosChange = useCallback(
         (files: File[]) => {
-            onChange(product.id, "photos", files);
+            handleFilesChange(files);
         },
-        [onChange, product.id]
+        [handleFilesChange]
     );
 
     return (
@@ -214,6 +224,7 @@ export default function ProductFormFields({
             <Field label="Additional Photos">
                 <FileUploader
                     files={product.photos || []}
+                    uploadedFiles={product.uploadedFiles || []}
                     onChange={handlePhotosChange}
                 />
             </Field>

@@ -13,8 +13,10 @@ import useFormContext, { FormProvider } from "@/app/context/formContext";
 import { CustomerType } from "@/app/interfaces/IFormState";
 import FormValidators from "@/app/utils/formValidations";
 import ProductList from "@/app/forms/productList/productList";
+import apiRequest from "@/app/utils/request";
 
 import usePageStyles from "@/app/usePageStyles";
+
 
 const ServiceRequestForm = () => {
   const styles = usePageStyles();
@@ -22,6 +24,7 @@ const ServiceRequestForm = () => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState<string>();
+  const [isEditingProduct, setIsEditingProduct] = useState(false);
 
   const steps = useMemo<IWizardStep[]>(() => {
     const listOfSteps: IWizardStep[] = [
@@ -51,29 +54,49 @@ const ServiceRequestForm = () => {
     listOfSteps.push({
       id: "product",
       label: "Appliances",
-      component: <ProductList />,
+      component: <ProductList setIsEditingProduct={setIsEditingProduct} />,
       isValid: FormValidators.areProductsValid(formData),
     });
     return listOfSteps;
-  }, [formData]);
+  }, [formData, setIsEditingProduct]);
 
   const handleFinalSave = useCallback(async () => {
     startTransition(async () => {
       try {
-        const response = await fetch("/api/incidents", {
+        const mappedPayload = {
+          customerType: formData.customerType,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address1: formData.address1,
+          address2: formData.address2 || "",
+          city: formData.city,
+          province: formData.province,
+          postalCode: formData.postalCode,
+          midlandRepName: formData.midlandRepName,
+          midlandAccount: formData.midlandAccount,
+          projectName: formData.projectName || "",
+          siteContact: formData.siteContact || "",
+          siteContactPhone: formData.siteContactPhone || "",
+          siteContactEmail: formData.siteContactEmail || "",
+          products: formData.products.map(p => ({
+            uploadSessionId: p.uploadSessionId || "",
+            unitNumber: p.unitNumber || "",
+            appliance: p.appliance || "",
+            brand: p.brand,
+            modelNumber: p.modelNumber || "",
+            serialNumber: p.serialNumber || "",
+            deliveryDate: p.deliveryDate || "",
+            invoiceNumber: p.invoiceNumber || "",
+            problem: p.problem
+          }))
+        };
+
+        await apiRequest("/api/service-requests", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+          body: mappedPayload,
         });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          // Logic for handling the production errors we set up in the API
-          throw new Error(result.error || "Failed to submit request");
-        }
 
         router.push("/success");
       } catch (error) {
@@ -110,7 +133,7 @@ const ServiceRequestForm = () => {
           : []
         }
       </MessageBarGroup>
-      <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} />
+      <Wizard steps={steps} onSave={handleFinalSave} saving={isPending} disableNav={isEditingProduct} />
     </div>
   );
 };
