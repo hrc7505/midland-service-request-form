@@ -12,16 +12,6 @@ interface Props {
     onRemove: (id: string) => void;
 }
 
-const applianceMap: Record<string, string> = {
-    "132190000": "Refrigerator",
-    "132190001": "Dishwasher",
-    "132190002": "Washer",
-    "132190003": "Dryer",
-    "132190004": "Range",
-    "132190005": "Oven",
-    "132190006": "Microwave",
-};
-
 export default function ProductCard({
     product,
     onEdit,
@@ -29,7 +19,7 @@ export default function ProductCard({
 }: Props) {
     const styles = useProductCardStyles();
 
-    const title = applianceMap[product.appliance || ""] || "Appliance";
+    const title = product.appliance || "Appliance";
 
     const summary = [
         product.brand,

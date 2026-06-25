@@ -10,7 +10,7 @@ import IWizardProps from "@/app/components/wizard/interfaces/IWizardProps";
 import useWizardStyles from "@/app/components/wizard/useWizardStyles";
 import useCommonStyles from "@/app/styles/useCommonStyles";
 
-const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
+const Wizard = ({ steps, onSave, saving, disableNav }: IWizardProps) => {
     const styles = useWizardStyles();
     const commonStyles = useCommonStyles();
 
@@ -163,7 +163,7 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
             <div className={mergeClasses(commonStyles.flexJustifyBetween, commonStyles.gap3, styles.footer)}>
                 <Button
                     type="button"
-                    disabled={isFirst || saving}
+                    disabled={isFirst || saving || disableNav}
                     icon={<ArrowLeftRegular />}
                     onClick={back}
                 >
@@ -174,7 +174,7 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
                     ? <Button
                         type="submit"
                         appearance="primary"
-                        disabled={saving}
+                        disabled={saving || disableNav}
                         icon={!saving ? <SaveRegular /> : undefined}
                     >
                         {saving ? <Spinner size="extra-tiny" label="Saving..." /> : "Submit"}
@@ -182,6 +182,7 @@ const Wizard = ({ steps, onSave, saving }: IWizardProps) => {
                     : <Button
                         type="submit"
                         appearance="primary"
+                        disabled={disableNav}
                         icon={<ArrowRightRegular />}
                         iconPosition="after"
                     >

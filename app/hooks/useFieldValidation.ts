@@ -18,8 +18,8 @@ export default function useFieldValidation<T>() {
      * @param isValid - A boolean determining if the current value is valid
      * @param errorMessage - The message to display if invalid
      */
-    const registerField = useCallback((fieldName: keyof T, isValid: boolean, errorMessage: string) => {
-        const showError = touched[fieldName] && !isValid;
+    const registerField = useCallback((fieldName: keyof T, isValid: boolean, errorMessage: string, forceShowError?: boolean) => {
+        const showError = (touched[fieldName] || forceShowError) && !isValid;
 
         return {
             // Spread these onto the Fluent UI <Field>
