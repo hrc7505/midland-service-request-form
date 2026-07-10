@@ -1,68 +1,97 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 
 import { IProduct, IProductFile, UploadStatus } from "@/app/interfaces/IFormState";
 import UploadService from "@/app/utils/uploadService";
 import { UpdateProductFn } from "@/app/forms/productList/types/types";
 
-export function useProductUpload(
-    product: IProduct,
-    onChange: UpdateProductFn
-) {
+export default function useProductUpload(product: IProduct, onChange: UpdateProductFn) {
+    const productRef = useRef(product);
+    productRef.current = product;
+
+    // Keep mutable refs of the latest known files to avoid async race conditions
+    // when multiple state updates occur before React can re-render.
+    const uploadedFilesRef = useRef(product.uploadedFiles || []);
+    const photosRef = useRef(product.photos || []);
+
+    useEffect(() => {
+        uploadedFilesRef.current = product.uploadedFiles || [];
+    }, [product.uploadedFiles]);
+
+    useEffect(() => {
+        photosRef.current = product.photos || [];
+    }, [product.photos]);
+
     const sessionCreationPromise = useRef<Promise<string> | null>(null);
 
     const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
 
     const handleFilesChange = useCallback(async (newFiles: File[]) => {
-        const oldFiles = product.photos || [];
-        const oldUploaded = product.uploadedFiles || [];
-        const productId = product.id;
+        const productId = productRef.current.id;
+
+        const currentPhotos = photosRef.current;
+        let currentUploaded = uploadedFilesRef.current;
+
+        const updateUploadedFiles = (newUploaded: IProductFile[]) => {
+            uploadedFilesRef.current = newUploaded;
+            onChange(productId, "uploadedFiles", newUploaded);
+        };
+
+        const updatePhotosList = (newPhotosList: File[]) => {
+            photosRef.current = newPhotosList;
+            onChange(productId, "photos", newPhotosList);
+        };
 
         // 1. Find removed files
         const newFileKeys = new Set(newFiles.map(getFileKey));
-        const removedFiles = oldFiles.filter(f => !newFileKeys.has(getFileKey(f)));
+        const removedFiles = currentPhotos.filter(f => !newFileKeys.has(getFileKey(f)));
 
         // 2. Find added files
-        const oldFileKeys = new Set(oldFiles.map(getFileKey));
+        const oldFileKeys = new Set(currentPhotos.map(getFileKey));
         const addedFiles = newFiles.filter(f => !oldFileKeys.has(getFileKey(f)));
 
-        let currentSessionId = product.uploadSessionId;
-        let currentUploaded = [...oldUploaded];
-        let currentPhotos = [...oldFiles];
+        let currentSessionId = productRef.current.uploadSessionId;
 
         // Process removals
         for (const file of removedFiles) {
             const key = getFileKey(file);
+            currentUploaded = uploadedFilesRef.current;
             const metadata = currentUploaded.find(u => u.fileKey === key);
 
             if (currentSessionId && metadata?.fileId) {
                 // Mark status as deleting in state
-                currentUploaded = currentUploaded.map(u =>
-                    u.fileKey === key ? { ...u, status: UploadStatus.Deleting } : u
+                updateUploadedFiles(
+                    uploadedFilesRef.current.map(u =>
+                        u.fileKey === key ? { ...u, status: UploadStatus.Deleting } : u
+                    )
                 );
-                onChange(productId, "uploadedFiles", currentUploaded);
 
                 try {
                     // Await backend deletion
                     await UploadService.deleteUploadFile(currentSessionId, metadata.fileId);
                 } catch (err) {
                     console.error("Failed to delete file from backend:", err);
+                    // Reset status back to Success since deletion failed, do not filter out
+                    updateUploadedFiles(
+                        uploadedFilesRef.current.map(u =>
+                            u.fileKey === key ? { ...u, status: UploadStatus.Success } : u
+                        )
+                    );
+                    continue; // Skip the removal logic below
                 }
             }
 
             // Finally remove from photos and uploaded files
-            currentPhotos = currentPhotos.filter(f => getFileKey(f) !== key);
-            currentUploaded = currentUploaded.filter(u => u.fileKey !== key);
+            updatePhotosList(photosRef.current.filter(f => getFileKey(f) !== key));
+            updateUploadedFiles(uploadedFilesRef.current.filter(u => u.fileKey !== key));
 
-            onChange(productId, "photos", currentPhotos);
-            onChange(productId, "uploadedFiles", currentUploaded);
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
 
         // Process additions
         if (addedFiles.length === 0) return;
 
         // Update local photos first
-        const updatedPhotos = [...currentPhotos, ...addedFiles];
-        onChange(productId, "photos", updatedPhotos);
+        updatePhotosList([...photosRef.current, ...addedFiles]);
 
         // Pre-populate uploaded files with "pending" / "uploading" state
         const initialAddedMetadata: IProductFile[] = addedFiles.map(file => ({
@@ -72,18 +101,20 @@ export function useProductUpload(
             status: UploadStatus.Pending,
         }));
 
-        currentUploaded = [...currentUploaded, ...initialAddedMetadata];
-        onChange(productId, "uploadedFiles", currentUploaded);
+        updateUploadedFiles([...uploadedFilesRef.current, ...initialAddedMetadata]);
+
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         // Helper to upload a single file
         const uploadSingleFile = async (file: File, sessionId: string) => {
             const key = getFileKey(file);
 
             // Set status to uploading
-            currentUploaded = currentUploaded.map(u =>
-                u.fileKey === key ? { ...u, status: UploadStatus.Uploading } : u
+            updateUploadedFiles(
+                uploadedFilesRef.current.map(u =>
+                    u.fileKey === key ? { ...u, status: UploadStatus.Uploading } : u
+                )
             );
-            onChange(productId, "uploadedFiles", currentUploaded);
 
             try {
                 // 1. Create file in session
@@ -100,16 +131,18 @@ export function useProductUpload(
                 await UploadService.completeUploadFile(sessionId, fileReg.FileId);
 
                 // 4. Update status to success
-                currentUploaded = currentUploaded.map(u =>
-                    u.fileKey === key ? { ...u, status: UploadStatus.Success, fileId: fileReg.FileId } : u
+                updateUploadedFiles(
+                    uploadedFilesRef.current.map(u =>
+                        u.fileKey === key ? { ...u, status: UploadStatus.Success, fileId: fileReg.FileId } : u
+                    )
                 );
-                onChange(productId, "uploadedFiles", currentUploaded);
             } catch (err) {
                 console.error(`Failed uploading ${file.name}:`, err);
-                currentUploaded = currentUploaded.map(u =>
-                    u.fileKey === key ? { ...u, status: UploadStatus.Error, errorMsg: err instanceof Error ? err.message : String(err) } : u
+                updateUploadedFiles(
+                    uploadedFilesRef.current.map(u =>
+                        u.fileKey === key ? { ...u, status: UploadStatus.Error, errorMsg: err instanceof Error ? err.message : String(err) } : u
+                    )
                 );
-                onChange(productId, "uploadedFiles", currentUploaded);
             }
         };
 
@@ -128,21 +161,26 @@ export function useProductUpload(
                 console.error("Failed to create upload session:", err);
                 sessionCreationPromise.current = null;
                 // Mark all added files with error status
-                currentUploaded = currentUploaded.map(u => {
-                    const isAdded = initialAddedMetadata.some(a => a.fileKey === u.fileKey);
-                    return isAdded ? { ...u, status: UploadStatus.Error, errorMsg: "Could not create upload session" } : u;
-                });
-                onChange(productId, "uploadedFiles", currentUploaded);
+                updateUploadedFiles(
+                    uploadedFilesRef.current.map(u => {
+                        const isAdded = initialAddedMetadata.some(a => a.fileKey === u.fileKey);
+                        return isAdded ? { ...u, status: UploadStatus.Error, errorMsg: "Could not create upload session" } : u;
+                    })
+                );
                 return;
             } finally {
                 sessionCreationPromise.current = null;
             }
         }
 
-        // Upload all added files concurrently under the session ID
-        await Promise.all(addedFiles.map(file => uploadSingleFile(file, currentSessionId!)));
+        // Upload all added files sequentially under the session ID
+        for (const file of addedFiles) {
+            await uploadSingleFile(file, currentSessionId);
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
 
-    }, [product, onChange]);
+    }, [onChange]);
 
     return { handleFilesChange };
 }
+

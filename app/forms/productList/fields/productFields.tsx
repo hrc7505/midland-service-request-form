@@ -1,14 +1,6 @@
 "use client";
 
-import {
-    Field,
-    Input,
-    Textarea,
-    Dropdown,
-    Option,
-    InputOnChangeData,
-    TextareaOnChangeData,
-} from "@fluentui/react-components";
+import { Field, Input, Textarea, Dropdown, Option, InputOnChangeData, TextareaOnChangeData } from "@fluentui/react-components";
 import { useCallback } from "react";
 
 import { IProduct, CustomerType } from "@/app/interfaces/IFormState";
@@ -17,7 +9,7 @@ import FileUploader from "@/app/components/fileUploader/fileUploader";
 import useFieldValidation from "@/app/hooks/useFieldValidation";
 import type { UpdateProductFn } from "@/app/forms/productList/types/types";
 import FormValidators from "@/app/utils/formValidations";
-import { useProductUpload } from "@/app/hooks/useProductUpload";
+import useProductUpload from "@/app/hooks/useProductUpload";
 
 import useProductFormFieldStyles from "@/app/forms/productList/fields/useProductFormFieldStyles";
 
@@ -40,11 +32,7 @@ const APPLIANCES = [
     { label: "Microwave", value: "Microwave" },
 ] as const;
 
-export default function ProductFormFields({
-    product,
-    onChange,
-    showErrors,
-}: ProductFormFieldsProps) {
+export default function ProductFormFields({ product, onChange, showErrors }: ProductFormFieldsProps) {
     const styles = useProductFormFieldStyles();
     const { formData } = useFormContext();
     const { registerField } = useFieldValidation<IProduct>();

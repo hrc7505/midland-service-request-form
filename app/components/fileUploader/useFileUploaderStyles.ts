@@ -24,8 +24,9 @@ const useFileUploaderStyles = makeStyles({
     },
 
     dropZoneError: {
-        border: `2px solid ${tokens.colorPaletteRedBorder2}`,
+        border: `1px solid ${tokens.colorPaletteRedBorder2}`,
         backgroundColor: tokens.colorPaletteRedBackground1,
+        margin: "1px", // Compensates for the 1px reduction in border width to prevent layout shift
     },
 
     shake: {
@@ -135,6 +136,18 @@ const useFileUploaderStyles = makeStyles({
         clip: "rect(0,0,0,0)",
         whiteSpace: "nowrap",
         border: 0,
+    },
+
+    thumbnailClickable: {
+        cursor: "pointer",
+        transition: "opacity 0.2s ease",
+        "&:hover": {
+            opacity: 0.8,
+        },
+    },
+
+    compressedText: {
+        color: tokens.colorPaletteGreenForeground1,
     },
 });
 

@@ -14,17 +14,23 @@ export interface ICreateFileResponse {
     ExpiresOnUtc: string;
 }
 
+const logDev = (...args: unknown[]) => {
+    if (process.env.NODE_ENV === "development") {
+        console.log(...args);
+    }
+};
+
 export default class UploadService {
     /**
      * Creates a new upload session
      */
     static async createUploadSession(): Promise<string> {
-        console.log("[UploadService] Creating upload session...");
+        logDev("[UploadService] Creating upload session...");
         const data = await apiRequest<IUploadSessionResponse>("/api/upload-sessions", {
             method: "POST",
         });
 
-        console.log("[UploadService] Create session response:", data);
+        logDev("[UploadService] Create session response:", data);
         const sessionId = data.id || data.uploadSessionId || data.UploadSessionId;
         if (!sessionId) {
             throw new Error("Invalid response: missing session ID");
@@ -40,13 +46,14 @@ export default class UploadService {
         fileName: string,
         contentType: string
     ): Promise<ICreateFileResponse> {
-        console.log(`[UploadService] Registering file ${fileName} under session ${uploadSessionId}...`);
+        logDev(`[UploadService] Registering file ${fileName} under session ${uploadSessionId}...`);
         const data = await apiRequest<ICreateFileResponse>(`/api/upload-sessions/${uploadSessionId}/files`, {
             method: "POST",
             body: { fileName, contentType },
         });
 
-        console.log("[UploadService] File registration response:", data);
+        // Redact SAS url from logs to avoid exposure of sensitive credentials
+        logDev("[UploadService] File registration response:", { FileId: data.FileId });
         return data;
     }
 
@@ -54,33 +61,33 @@ export default class UploadService {
      * Uploads the raw binary file to the Azure Blob secure SAS URL via proxy
      */
     static async uploadToAzureBlob(uploadUrl: string, file: File): Promise<void> {
-        console.log(`[UploadService] Uploading binary of ${file.name} via proxy...`, { size: file.size, type: file.type });
+        logDev(`[UploadService] Uploading binary of ${file.name} via proxy...`, { size: file.size, type: file.type });
         await apiRequest(`/api/upload-to-blob?url=${encodeURIComponent(uploadUrl)}`, {
             method: "POST",
             body: file,
         });
-        console.log(`[UploadService] Uploaded binary of ${file.name} successfully via proxy.`);
+        logDev(`[UploadService] Uploaded binary of ${file.name} successfully via proxy.`);
     }
 
     /**
      * Marks the file upload as complete
      */
     static async completeUploadFile(uploadSessionId: string, fileId: string): Promise<void> {
-        console.log(`[UploadService] Completing file upload ${fileId} in session ${uploadSessionId}...`);
+        logDev(`[UploadService] Completing file upload ${fileId} in session ${uploadSessionId}...`);
         await apiRequest(`/api/upload-sessions/${uploadSessionId}/files/${fileId}/complete`, {
             method: "POST",
         });
-        console.log(`[UploadService] File upload completion successful for ${fileId}.`);
+        logDev(`[UploadService] File upload completion successful for ${fileId}.`);
     }
 
     /**
      * Deletes a file from the upload session
      */
     static async deleteUploadFile(uploadSessionId: string, fileId: string): Promise<void> {
-        console.log(`[UploadService] Deleting file ${fileId} from session ${uploadSessionId}...`);
+        logDev(`[UploadService] Deleting file ${fileId} from session ${uploadSessionId}...`);
         await apiRequest(`/api/upload-sessions/${uploadSessionId}/files/${fileId}`, {
             method: "DELETE",
         });
-        console.log(`[UploadService] File ${fileId} deleted successfully.`);
+        logDev(`[UploadService] File ${fileId} deleted successfully.`);
     }
 }

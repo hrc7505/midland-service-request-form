@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, SubmitEvent, useEffect } from "react";
+import { useCallback, useState, SubmitEvent } from "react";
 import { Badge, Button, Divider, Spinner, Text, tokens, mergeClasses } from "@fluentui/react-components";
 import { ArrowLeftRegular, ArrowRightRegular, CheckmarkCircleFilled, SaveRegular } from "@fluentui/react-icons";
 
@@ -18,13 +18,10 @@ const Wizard = ({ steps, onSave, saving, disableNav }: IWizardProps) => {
 
     const hasSteps = steps.length > 0;
 
-    useEffect(() => {
-        if (!hasSteps) {
-            setCurrentIdx(0);
-            return;
-        }
-        setCurrentIdx(prev => Math.min(prev, steps.length - 1));
-    }, [hasSteps, steps.length]);
+    const safeIdx = hasSteps ? Math.min(currentIdx, steps.length - 1) : 0;
+    if (currentIdx !== safeIdx) {
+        setCurrentIdx(safeIdx);
+    }
 
     const isValidIdx = currentIdx >= 0 && currentIdx < steps.length;
     const currentStep = hasSteps && isValidIdx ? steps[currentIdx] : undefined;
@@ -48,6 +45,9 @@ const Wizard = ({ steps, onSave, saving, disableNav }: IWizardProps) => {
 
     const handleSubmit = useCallback((e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (disableNav) {
+            return;
+        }
 
         // Force all inputs to be "touched" so custom validation hooks display inline errors
         const elements = e.currentTarget.querySelectorAll("input, textarea, select");
@@ -62,7 +62,7 @@ const Wizard = ({ steps, onSave, saving, disableNav }: IWizardProps) => {
         } else {
             if (canProgress && isNativeValid) next();
         }
-    }, [isLast, canProgress, next, onSave]);
+    }, [isLast, canProgress, next, onSave, disableNav]);
 
     if (!hasSteps) {
         return null;

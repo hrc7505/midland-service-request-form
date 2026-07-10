@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useMemo, useId, useEffect } from "react";
-import { Text, Button, mergeClasses, Image, Tooltip, Spinner } from "@fluentui/react-components";
-import { ArrowUploadRegular, DocumentRegular, DismissRegular, WarningRegular, CheckmarkCircleFilled, ErrorCircleFilled } from "@fluentui/react-icons";
+import { Text, Button, mergeClasses, Image, Tooltip, Spinner, Field } from "@fluentui/react-components";
+import { ArrowUploadRegular, DocumentRegular, DismissRegular, CheckmarkCircleFilled, ErrorCircleFilled } from "@fluentui/react-icons";
 
+import compressImage from "@/app/utils/imageCompression";
 import FileUploaderProps from "@/app/components/fileUploader/interfaces/IFileUploaderProps";
 import { UploadStatus } from "@/app/interfaces/IFormState";
+import ImagePreviewDialog from "@/app/components/imagePreviewDialog/imagePreviewDialog";
+import formatSize from "@/app/utils/formatSize";
 
 import useFileUploaderStyles from "@/app/components/fileUploader/useFileUploaderStyles";
 import useCommonStyles from "@/app/styles/useCommonStyles";
@@ -41,11 +44,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const [isDragging, setIsDragging] = useState(false);
     const [showError, setShowError] = useState(false);
     const [ariaMessage, setAriaMessage] = useState("");
-    const [previews, setPreviews] = useState<{key: string, url: string | null}[]>([]);
+    const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [fullScreenPreview, setFullScreenPreview] = useState<{ url: string; name: string; size: number; originalSize?: number } | null>(null);
+    const [previews, setPreviews] = useState<{ key: string, url: string | null }[]>([]);
+    const [isCompressing, setIsCompressing] = useState(false);
 
     const isMaxReached = useMemo(() => files.length >= maxFiles, [files.length, maxFiles]);
 
-    const isDisabled = disabled || isMaxReached;
+    const isDisabled = disabled || isMaxReached || isCompressing;
 
     const getFileKey = useCallback((file: File) => `${file.name}-${file.size}-${file.lastModified}`, []);
 
@@ -61,7 +67,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             }
             if (type === "*/*") return true;
             if (type.endsWith("/*")) {
-                return file.type.startsWith(type.replace("/*", ""));
+                const baseType = type.replace("/*", "");
+                if (!file.type && baseType === "image") {
+                    // Fallback for some mobile browsers returning empty file.type for camera photos
+                    return true;
+                }
+                return file.type.startsWith(baseType);
             }
             return file.type === type;
         });
@@ -75,53 +86,70 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         onError?.(message);
         setAriaMessage(message);
         setShowError(true);
-        setTimeout(() => setShowError(false), 300);
-    }, [onError]
-    );
+        if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+        errorTimeoutRef.current = setTimeout(() => setShowError(false), 300);
+    }, [onError]);
 
-    const processFiles = useCallback((fileList: FileList | null) => {
+    const processFiles = useCallback(async (fileList: FileList | null) => {
+        setAriaMessage("");
         if (!fileList || isDisabled) return;
 
-        const incoming = Array.from(fileList);
-        const valid: File[] = [];
+        setIsCompressing(true);
+        try {
+            const incoming = Array.from(fileList);
+            const valid: File[] = [];
 
-        for (const file of incoming) {
-            if (!isValidType(file)) {
-                triggerError(`Unsupported: ${file.name}`);
-                continue;
+            for (const file of incoming) {
+                if (!isValidType(file)) {
+                    triggerError(`Unsupported: ${file.name}`);
+                    continue;
+                }
+
+                let processedFile = file;
+
+                // Compress images only if > maxFileSizeMB
+                if (file.size > maxFileSizeMB * 1024 * 1024 && (file.type.startsWith("image/") || (!file.type && acceptedTypes.includes("image/*")))) {
+                    try {
+                        processedFile = await compressImage(file, maxFileSizeMB, 1920);
+                    } catch (error) {
+                        console.error("Image compression error:", error);
+                    }
+                }
+
+                if (!isValidSize(processedFile)) {
+                    triggerError(`Too large: ${processedFile.name}`);
+                    continue;
+                }
+
+                valid.push(processedFile);
             }
 
-            if (!isValidSize(file)) {
-                triggerError(`Too large: ${file.name}`);
-                continue;
+            const existing = new Set(files.map(getFileKey));
+            const unique = valid.filter((f) => !existing.has(getFileKey(f)));
+
+            if (unique.length !== valid.length) {
+                triggerError("Duplicate files ignored");
             }
 
-            valid.push(file);
-        }
+            let next = unique;
 
-        const existing = new Set(files.map(getFileKey));
-        const unique = valid.filter((f) => !existing.has(getFileKey(f)));
+            if (files.length + next.length > maxFiles) {
+                const remaining = maxFiles - files.length;
 
-        if (unique.length !== valid.length) {
-            triggerError("Duplicate files ignored");
-        }
-
-        let next = unique;
-
-        if (files.length + next.length > maxFiles) {
-            const remaining = maxFiles - files.length;
-
-            if (remaining <= 0) {
-                triggerError(`Max ${maxFiles} files allowed`);
-                return;
+                if (remaining <= 0) {
+                    triggerError(`Max ${maxFiles} files allowed`);
+                    return;
+                }
+                const ignoredCount = next.length - remaining;
+                next = next.slice(0, remaining);
+                triggerError(`Max ${maxFiles} files allowed. ${ignoredCount} file(s) ignored.`);
             }
 
-            next = next.slice(0, remaining);
-            triggerError(`Only ${remaining} more allowed`);
-        }
-
-        if (next.length) {
-            onChange([...files, ...next]);
+            if (next.length) {
+                onChange([...files, ...next]);
+            }
+        } finally {
+            setIsCompressing(false);
         }
     },
         [
@@ -130,9 +158,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             isValidType,
             isValidSize,
             maxFiles,
+            maxFileSizeMB,
             onChange,
             triggerError,
             getFileKey,
+            acceptedTypes,
         ]
     );
 
@@ -165,8 +195,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     }, [files, getFileKey]);
 
     useEffect(() => {
+        const urls = objectUrls.current;
         return () => {
-            Object.values(objectUrls.current).forEach((url) => URL.revokeObjectURL(url));
+            Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
         };
     }, []);
 
@@ -187,6 +218,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         return `${base.slice(0, visible)}…${ext}`;
     }, []);
 
+    useEffect(() => {
+        return () => {
+            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+        };
+    }, []);
+
     return (
         <div className={commonStyles.flexColumn}>
             {/* ARIA live region */}
@@ -194,65 +231,72 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                 {ariaMessage}
             </div>
 
-            {/* Dropzone */}
-            <div
-                role="button"
-                tabIndex={0}
-                aria-disabled={isDisabled}
-                aria-describedby={liveRegionId}
-                className={mergeClasses(
-                    commonStyles.flexColumn,
-                    commonStyles.flexCenter,
-                    commonStyles.gap2,
-                    styles.dropZone,
-                    isDragging && styles.dropZoneActive,
-                    isDisabled && styles.dropZoneDisabled,
-                    showError && styles.dropZoneError,
-                    showError && styles.shake
-                )}
-                onDragOver={(e) => {
-                    e.preventDefault();
-                    if (!isDisabled) setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDragging(false);
-                    processFiles(e.dataTransfer.files);
-                }}
-                onClick={() => !isDisabled && inputRef.current?.click()}
-                onKeyDown={(e) => {
-                    if ((e.key === "Enter" || e.key === " ") && !isDisabled) {
-                        e.preventDefault();
-                        inputRef.current?.click();
-                    }
-                }}
+            {/* Dropzone wrapped in Field for perfect validation UI */}
+            <Field
+                validationState={ariaMessage ? "error" : "none"}
+                validationMessage={ariaMessage || undefined}
             >
-                <ArrowUploadRegular fontSize={40} />
-
-                <Text weight="semibold">
-                    {isMaxReached
-                        ? "Maximum files uploaded"
-                        : "Drag files or click to upload"}
-                </Text>
-
-                <Text size={200}>
-                    {accept} • Max {maxFiles} • {maxFileSizeMB}MB each
-                </Text>
-
-                <input
-                    ref={inputRef}
-                    type="file"
-                    multiple={multiple}
-                    accept={accept}
-                    className={styles.hiddenInput}
-                    onChange={(e) => {
-                        processFiles(e.target.files);
-                        e.target.value = "";
+                <div
+                    role="button"
+                    tabIndex={0}
+                    aria-disabled={isDisabled}
+                    aria-describedby={liveRegionId}
+                    className={mergeClasses(
+                        commonStyles.flexColumn,
+                        commonStyles.flexCenter,
+                        commonStyles.gap2,
+                        styles.dropZone,
+                        isDragging && styles.dropZoneActive,
+                        isDisabled && styles.dropZoneDisabled,
+                        !!ariaMessage && styles.dropZoneError,
+                        showError && styles.shake
+                    )}
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        if (!isDisabled) setIsDragging(true);
                     }}
-                    disabled={isDisabled}
-                />
-            </div>
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        processFiles(e.dataTransfer.files);
+                    }}
+                    onClick={() => !isDisabled && inputRef.current?.click()}
+                    onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === " ") && !isDisabled) {
+                            e.preventDefault();
+                            inputRef.current?.click();
+                        }
+                    }}
+                >
+                    {isCompressing ? <Spinner size="large" /> : <ArrowUploadRegular fontSize={40} />}
+
+                    <Text weight="semibold">
+                        {isCompressing
+                            ? "Compressing images..."
+                            : isMaxReached
+                                ? "Maximum files uploaded"
+                                : "Drag files or click to upload"}
+                    </Text>
+
+                    <Text size={200}>
+                        {accept} • Max {maxFiles} • {maxFileSizeMB}MB each
+                    </Text>
+
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        multiple={multiple}
+                        accept={accept}
+                        className={styles.hiddenInput}
+                        onChange={(e) => {
+                            processFiles(e.target.files);
+                            e.target.value = "";
+                        }}
+                        disabled={isDisabled}
+                    />
+                </div>
+            </Field>
 
             {/* Grid */}
             <div className={mergeClasses(styles.fileGrid, commonStyles.gap3)}>
@@ -260,22 +304,45 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                     const preview = previews[index]?.url;
                     const key = getFileKey(file);
                     const metadata = uploadedFiles.find(u => u.fileKey === key);
-                    const status = metadata?.status || UploadStatus.Success;
+                    const status = metadata?.status || UploadStatus.Pending;
                     const isUploading = status === UploadStatus.Uploading || status === UploadStatus.Pending;
                     const isDeleting = status === UploadStatus.Deleting;
                     const isError = status === UploadStatus.Error;
                     const isSuccess = status === UploadStatus.Success;
 
+                    const originalSize = (file as File & { originalSize?: number }).originalSize;
+                    const compressedPercent = originalSize && originalSize > file.size
+                        ? Math.round((1 - file.size / originalSize) * 100)
+                        : null;
+
+                    const tooltipContent = (
+                        <div className={mergeClasses(commonStyles.flexColumn, commonStyles.gap1)}>
+                            <Text weight="semibold">{file.name}</Text>
+                            <Text size={200}>Size: {formatSize(file.size)}</Text>
+                            {compressedPercent !== null && (
+                                <Text size={200} className={styles.compressedText}>
+                                    Compressed by {compressedPercent}% (was {formatSize(originalSize!)})
+                                </Text>
+                            )}
+                        </div>
+                    );
+
                     return (
                         <div key={key} className={styles.fileCard}>
-                            <Tooltip content={isError ? (metadata?.errorMsg || "Upload failed") : file.name} relationship="label">
+                            <Tooltip content={isError ? (metadata?.errorMsg || "Upload failed") : tooltipContent} relationship="label">
                                 <div>
                                     <div className={styles.thumbnailContainer}>
                                         {preview ? (
                                             <Image
                                                 src={preview}
                                                 alt={file.name}
-                                                className={styles.thumbnail}
+                                                className={mergeClasses(styles.thumbnail, styles.thumbnailClickable)}
+                                                onClick={() => setFullScreenPreview({
+                                                    url: preview,
+                                                    name: file.name,
+                                                    size: file.size,
+                                                    originalSize: (file as File & { originalSize?: number }).originalSize
+                                                })}
                                             />
                                         ) : (
                                             <div className={styles.thumbnail}>
@@ -322,6 +389,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                                         disabled={isUploading || isDeleting}
                                         onClick={(e) => {
                                             e.stopPropagation();
+                                            setAriaMessage("");
                                             onChange(files.filter((_, i) => i !== index));
                                         }}
                                         aria-label={`Remove ${file.name}`}
@@ -338,6 +406,13 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                     );
                 })}
             </div>
+
+            {/* Full Screen Preview Dialog */}
+            <ImagePreviewDialog
+                open={!!fullScreenPreview}
+                onOpenChange={(isOpen) => !isOpen && setFullScreenPreview(null)}
+                previewData={fullScreenPreview}
+            />
         </div>
     );
 };

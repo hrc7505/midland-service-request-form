@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const BASE_API_URL = process.env.BASE_API_URL;
+import serverRequest from "@/app/utils/serverRequest";
 
 export async function POST(
     request: Request,
@@ -10,7 +10,7 @@ export async function POST(
         const { uploadSessionId } = await params;
         const body = await request.json();
 
-        const response = await fetch(`${BASE_API_URL}/api/upload-sessions/${uploadSessionId}/files`, {
+        const res = await serverRequest(`/api/upload-sessions/${uploadSessionId}/files`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -18,17 +18,22 @@ export async function POST(
             body: JSON.stringify(body),
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[UPLOAD_FILE_CREATE_FAILED]", response.status, errorText);
+        if (!res.ok) {
+            console.error("[UPLOAD_FILE_CREATE_FAILED]", res.status, res.errorText);
             return NextResponse.json(
-                { error: errorText || "Failed to register file in upload session" },
-                { status: response.status }
+                { error: res.errorText || "Failed to register file in upload session" },
+                { status: res.status }
             );
         }
 
-        const data = await response.json();
-        console.log("[UPLOAD_FILE_CREATE_SUCCESS]", data);
+        // Redact UploadUrl from success logs to avoid exposing Azure SAS credentials
+        const data = res.data;
+        const logData = typeof data === "object" && data !== null ? { ...data } as Record<string, unknown> : { data } as Record<string, unknown>;
+        if (logData && "UploadUrl" in logData) {
+            logData.UploadUrl = "[REDACTED]";
+        }
+        console.log("[UPLOAD_FILE_CREATE_SUCCESS]", logData);
+
         return NextResponse.json(data);
     } catch (error) {
         console.error("[UPLOAD_FILE_CREATE_ERROR]", error);

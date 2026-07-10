@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const BASE_API_URL = process.env.BASE_API_URL;
+import serverRequest from "@/app/utils/serverRequest";
 
 export async function DELETE(
     request: Request,
@@ -9,29 +9,19 @@ export async function DELETE(
     try {
         const { uploadSessionId, fileId } = await params;
 
-        const response = await fetch(`${BASE_API_URL}/api/upload-sessions/${uploadSessionId}/files/${fileId}`, {
+        const res = await serverRequest(`/api/upload-sessions/${uploadSessionId}/files/${fileId}`, {
             method: "DELETE",
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[UPLOAD_FILE_DELETE_FAILED]", response.status, errorText);
+        if (!res.ok) {
+            console.error("[UPLOAD_FILE_DELETE_FAILED]", res.status, res.errorText);
             return NextResponse.json(
-                { error: errorText || "Failed to delete file from upload session" },
-                { status: response.status }
+                { error: res.errorText || "Failed to delete file from upload session" },
+                { status: res.status }
             );
         }
 
-        let data = {};
-        const text = await response.text();
-        if (text) {
-            try {
-                data = JSON.parse(text);
-            } catch {
-                data = { message: text };
-            }
-        }
-        return NextResponse.json(data);
+        return NextResponse.json(res.data);
     } catch (error) {
         console.error("[UPLOAD_FILE_DELETE_ERROR]", error);
         return NextResponse.json(
