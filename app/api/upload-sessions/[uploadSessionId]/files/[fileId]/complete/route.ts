@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const BASE_API_URL = process.env.BASE_API_URL;
+import serverRequest from "@/app/utils/serverRequest";
 
 export async function POST(
     request: Request,
@@ -9,32 +9,22 @@ export async function POST(
     try {
         const { uploadSessionId, fileId } = await params;
 
-        const response = await fetch(`${BASE_API_URL}/api/upload-sessions/${uploadSessionId}/files/${fileId}/complete`, {
+        const res = await serverRequest(`/api/upload-sessions/${uploadSessionId}/files/${fileId}/complete`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[UPLOAD_FILE_COMPLETE_FAILED]", response.status, errorText);
+        if (!res.ok) {
+            console.error("[UPLOAD_FILE_COMPLETE_FAILED]", res.status, res.errorText);
             return NextResponse.json(
-                { error: errorText || "Failed to complete upload session file" },
-                { status: response.status }
+                { error: res.errorText || "Failed to complete upload session file" },
+                { status: res.status }
             );
         }
 
-        let data = {};
-        const text = await response.text();
-        if (text) {
-            try {
-                data = JSON.parse(text);
-            } catch {
-                data = { message: text };
-            }
-        }
-        return NextResponse.json(data);
+        return NextResponse.json(res.data);
     } catch (error) {
         console.error("[UPLOAD_FILE_COMPLETE_ERROR]", error);
         return NextResponse.json(

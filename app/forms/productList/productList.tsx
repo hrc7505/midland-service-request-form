@@ -31,6 +31,7 @@ export default function ProductList({ setIsEditingProduct }: IProductListProps =
     const [editingProductId, setEditingProductId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
+    const [isCleaningUp, setIsCleaningUp] = useState(false);
 
     const isEditing = Boolean(editingProductId);
     const isEffectivelyAdding = !isEditing && !isAdding && formData.products.length === 0;
@@ -65,8 +66,8 @@ export default function ProductList({ setIsEditingProduct }: IProductListProps =
     const isUploadingOrDeleting = useMemo(() => {
         const productToValidate = draftProduct ?? (isEffectivelyAdding ? createEmptyProduct() : null);
         if (!productToValidate) return false;
-        return productToValidate.uploadedFiles?.some(f => f.status === UploadStatus.Uploading || f.status === UploadStatus.Pending || f.status === UploadStatus.Deleting) ?? false;
-    }, [draftProduct, isEffectivelyAdding]);
+        return (productToValidate.uploadedFiles?.some(f => f.status === UploadStatus.Uploading || f.status === UploadStatus.Pending || f.status === UploadStatus.Deleting) ?? false) || isCleaningUp;
+    }, [draftProduct, isEffectivelyAdding, isCleaningUp]);
 
     // ➕ Add new
     const handleAdd = useCallback(() => {
@@ -113,35 +114,69 @@ export default function ProductList({ setIsEditingProduct }: IProductListProps =
     }, [draftProduct, isDraftValid, isAdding, isEffectivelyAdding, formData.products, handleUpdate]);
 
     // ❌ Cancel (only for edit)
-    const handleCancel = useCallback(() => {
-        if (isAdding && draftProduct && draftProduct.uploadSessionId && draftProduct.uploadedFiles) {
+    const handleCancel = useCallback(async () => {
+        if (draftProduct && draftProduct.uploadSessionId && draftProduct.uploadedFiles) {
             const sessionId = draftProduct.uploadSessionId;
-            draftProduct.uploadedFiles.forEach(file => {
-                if (file.fileId) {
-                    UploadService.deleteUploadFile(sessionId, file.fileId).catch(err => {
-                        console.error("Failed to clean up uploaded file on cancel:", err);
-                    });
+            let filesToDelete: string[] = [];
+
+            if (isAdding) {
+                // All uploaded files are new
+                filesToDelete = draftProduct.uploadedFiles
+                    .map(f => f.fileId)
+                    .filter((id): id is string => !!id);
+            } else {
+                // Find original product to see which files were already there
+                const originalProduct = formData.products.find(p => p.id === draftProduct.id);
+                const originalFileIds = new Set(originalProduct?.uploadedFiles?.map(f => f.fileId).filter(Boolean) || []);
+                filesToDelete = draftProduct.uploadedFiles
+                    .map(f => f.fileId)
+                    .filter((id): id is string => !!id && !originalFileIds.has(id));
+            }
+
+            if (filesToDelete.length > 0) {
+                setIsCleaningUp(true);
+                try {
+                    const deletePromises = filesToDelete.map(fileId =>
+                        UploadService.deleteUploadFile(sessionId, fileId).catch(err => {
+                            console.error(`Failed to clean up uploaded file ${fileId} on cancel:`, err);
+                            throw err;
+                        })
+                    );
+                    await Promise.allSettled(deletePromises);
+                } finally {
+                    setIsCleaningUp(false);
                 }
-            });
+            }
         }
         setDraftProduct(null);
         setEditingProductId(null);
         setIsAdding(false);
         setShowErrors(false);
-    }, [isAdding, draftProduct]);
+    }, [isAdding, draftProduct, formData.products]);
 
     // 🗑 Delete
-    const handleRemove = useCallback((id: string) => {
+    const handleRemove = useCallback(async (id: string) => {
         const productToRemove = formData.products.find(p => p.id === id);
         if (productToRemove && productToRemove.uploadSessionId && productToRemove.uploadedFiles) {
             const sessionId = productToRemove.uploadSessionId;
-            productToRemove.uploadedFiles.forEach(file => {
-                if (file.fileId) {
-                    UploadService.deleteUploadFile(sessionId, file.fileId).catch(err => {
-                        console.error("Failed to delete file from backend on product deletion:", err);
-                    });
+            const filesToDelete = productToRemove.uploadedFiles
+                .map(f => f.fileId)
+                .filter((fid): fid is string => !!fid);
+
+            if (filesToDelete.length > 0) {
+                setIsCleaningUp(true);
+                try {
+                    const deletePromises = filesToDelete.map(fileId =>
+                        UploadService.deleteUploadFile(sessionId, fileId).catch(err => {
+                            console.error(`Failed to delete file ${fileId} from backend on product deletion:`, err);
+                            throw err;
+                        })
+                    );
+                    await Promise.allSettled(deletePromises);
+                } finally {
+                    setIsCleaningUp(false);
                 }
-            });
+            }
         }
         handleUpdate(
             "products",
@@ -194,7 +229,7 @@ export default function ProductList({ setIsEditingProduct }: IProductListProps =
 
                             {/* ✅ Cancel only in edit mode */}
                             {(isEditing || (isAdding && formData.products.length > 0)) && (
-                                <Button onClick={handleCancel}>
+                                <Button onClick={handleCancel} disabled={isCleaningUp}>
                                     Cancel
                                 </Button>
                             )}

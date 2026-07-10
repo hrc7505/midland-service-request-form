@@ -1,28 +1,26 @@
 import { NextResponse } from "next/server";
 
-const BASE_API_URL = process.env.BASE_API_URL;
+import serverRequest from "@/app/utils/serverRequest";
 
-export async function POST(request: Request) {
+export async function POST() {
     try {
-        const response = await fetch(`${BASE_API_URL}/api/upload-sessions`, {
+        const res = await serverRequest("/api/upload-sessions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[UPLOAD_SESSION_CREATE_FAILED]", response.status, errorText);
+        if (!res.ok) {
+            console.error("[UPLOAD_SESSION_CREATE_FAILED]", res.status, res.errorText);
             return NextResponse.json(
-                { error: errorText || "Failed to create upload session" },
-                { status: response.status }
+                { error: res.errorText || "Failed to create upload session" },
+                { status: res.status }
             );
         }
 
-        const data = await response.json();
-        console.log("[UPLOAD_SESSION_CREATE_SUCCESS]", data);
-        return NextResponse.json(data);
+        console.log("[UPLOAD_SESSION_CREATE_SUCCESS]", res.data);
+        return NextResponse.json(res.data);
     } catch (error) {
         console.error("[UPLOAD_SESSION_CREATE_ERROR]", error);
         return NextResponse.json(

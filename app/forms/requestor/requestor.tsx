@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, ChangeEvent } from "react";
-import { Input, Field, Label, InputOnChangeData, mergeClasses } from "@fluentui/react-components";
+import { Input, Field, InputOnChangeData, mergeClasses } from "@fluentui/react-components";
 
 import IFormState, { CustomerType } from "@/app/interfaces/IFormState";
 import useFormContext from "@/app/context/formContext";

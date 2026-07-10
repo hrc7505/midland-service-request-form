@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-const BASE_API_URL = process.env.BASE_API_URL;
+import serverRequest from "@/app/utils/serverRequest";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const response = await fetch(`${BASE_API_URL}/api/service-requests`, {
+        const res = await serverRequest("/api/service-requests", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -14,25 +14,15 @@ export async function POST(request: Request) {
             body: JSON.stringify(body),
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[SERVICE_REQUEST_SUBMIT_FAILED]", response.status, errorText);
+        if (!res.ok) {
+            console.error("[SERVICE_REQUEST_SUBMIT_FAILED]", res.status, res.errorText);
             return NextResponse.json(
-                { error: errorText || "Failed to submit service request" },
-                { status: response.status }
+                { error: res.errorText || "Failed to submit service request" },
+                { status: res.status }
             );
         }
 
-        const text = await response.text();
-        let data = {};
-        if (text) {
-            try {
-                data = JSON.parse(text);
-            } catch {
-                data = { message: text };
-            }
-        }
-        return NextResponse.json(data);
+        return NextResponse.json(res.data);
     } catch (error) {
         console.error("[SERVICE_REQUEST_SUBMIT_ERROR]", error);
         return NextResponse.json(

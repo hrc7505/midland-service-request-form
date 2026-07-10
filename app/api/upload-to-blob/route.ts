@@ -9,9 +9,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing upload URL" }, { status: 400 });
         }
 
+        // Validate that uploadUrl is a secure HTTPS Azure Blob endpoint for expected storage accounts
+        let parsedUrl: URL;
+        try {
+            parsedUrl = new URL(uploadUrl);
+        } catch {
+            return NextResponse.json({ error: "Invalid upload URL format" }, { status: 400 });
+        }
+
+        const isHttps = parsedUrl.protocol === "https:";
+        const isAzureBlob = parsedUrl.hostname.endsWith(".blob.core.windows.net");
+        const accountName = parsedUrl.hostname.split(".")[0];
+        const isAllowedAccount = accountName.startsWith("midlandcs");
+
+        if (!isHttps || !isAzureBlob || !isAllowedAccount) {
+            return NextResponse.json({ error: "Unauthorized upload destination" }, { status: 400 });
+        }
+
         const contentType = request.headers.get("Content-Type") || "application/octet-stream";
         
-        // Read raw binary body from request
+        // Read raw binary body from request to prevent chunked transfer encoding (unsupported by Azure Blob REST API)
         const arrayBuffer = await request.arrayBuffer();
 
         console.log(`[Proxy] Forwarding upload to Azure Blob. Length: ${arrayBuffer.byteLength} bytes`);
@@ -23,6 +40,7 @@ export async function POST(request: Request) {
                 "Content-Type": contentType,
             },
             body: Buffer.from(arrayBuffer),
+            signal: AbortSignal.timeout(60000), // 60s timeout for large file uploads
         });
 
         if (!azureResponse.ok) {
