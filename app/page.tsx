@@ -89,7 +89,8 @@ const ServiceRequestForm = () => {
             serialNumber: p.serialNumber || "",
             deliveryDate: p.deliveryDate || "",
             invoiceNumber: p.invoiceNumber || "",
-            problem: p.problem
+            problem: p.problem,
+            additionalNotes: p.additionalNotes,
           }))
         };
 
