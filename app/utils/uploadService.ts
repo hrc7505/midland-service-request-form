@@ -68,15 +68,21 @@ export default class UploadService {
     }
 
     /**
-     * Uploads the raw binary file to the Azure Blob secure SAS URL via proxy
+     * Uploads the raw binary file directly to the Azure Blob secure SAS URL
      */
     static async uploadToAzureBlob(uploadUrl: string, file: File): Promise<void> {
-        logDev(`[UploadService] Uploading binary of ${file.name} via proxy...`, { size: file.size, type: file.type });
-        await apiRequest(`/api/upload-to-blob?url=${encodeURIComponent(uploadUrl)}`, {
-            method: "POST",
+        logDev(`[UploadService] Uploading binary of ${file.name} directly to Azure...`, { size: file.size, type: file.type });
+        
+        await apiRequest(uploadUrl, {
+            method: "PUT",
+            headers: {
+                "x-ms-blob-type": "BlockBlob",
+                // apiRequest automatically handles setting Content-Type for File objects
+            },
             body: file,
         });
-        logDev(`[UploadService] Uploaded binary of ${file.name} successfully via proxy.`);
+        
+        logDev(`[UploadService] Uploaded binary of ${file.name} successfully to Azure.`);
     }
 
     /**
