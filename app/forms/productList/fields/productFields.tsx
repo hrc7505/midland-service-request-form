@@ -10,6 +10,7 @@ import useFieldValidation from "@/app/hooks/useFieldValidation";
 import type { UpdateProductFn } from "@/app/forms/productList/types/types";
 import FormValidators from "@/app/utils/formValidations";
 import useProductUpload from "@/app/hooks/useProductUpload";
+import { FILE_UPLOADER_ACCEPT_STRING } from "@/app/config/fileConfig";
 
 import useProductFormFieldStyles from "@/app/forms/productList/fields/useProductFormFieldStyles";
 
@@ -36,7 +37,7 @@ export default function ProductFormFields({ product, onChange, showErrors }: Pro
     const styles = useProductFormFieldStyles();
     const { formData } = useFormContext();
     const { registerField } = useFieldValidation<IProduct>();
-    const { handleFilesChange } = useProductUpload(product, onChange);
+    const { handleFilesChange, handleRetryUpload } = useProductUpload(product, onChange);
 
     const applianceField = registerField(
         "appliance",
@@ -107,16 +108,6 @@ export default function ProductFormFields({ product, onChange, showErrors }: Pro
             }
         },
         [onChange, product.id]
-    );
-
-    /**
-     * File uploader change
-     */
-    const handlePhotosChange = useCallback(
-        (files: File[]) => {
-            handleFilesChange(files);
-        },
-        [handleFilesChange]
     );
 
     return (
@@ -213,8 +204,10 @@ export default function ProductFormFields({ product, onChange, showErrors }: Pro
                 <FileUploader
                     files={product.photos || []}
                     uploadedFiles={product.uploadedFiles || []}
-                    onChange={handlePhotosChange}
-                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif,video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.doc,.docx,.xls,.xlsx"
+                    onChange={handleFilesChange}
+                    onRetry={handleRetryUpload}
+                    accept={FILE_UPLOADER_ACCEPT_STRING}
+                    maxFiles={6}
                 />
             </Field>
 

@@ -5,7 +5,7 @@ import { makeStyles, tokens } from "@fluentui/react-components";
  */
 const useFileUploaderStyles = makeStyles({
     dropZone: {
-        padding: "32px",
+        padding: "20px",
         border: `2px dashed ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
         backgroundColor: tokens.colorNeutralBackground2,
@@ -74,12 +74,19 @@ const useFileUploaderStyles = makeStyles({
     fileName: {
         display: "block",
         fontSize: tokens.fontSizeBase200,
-    },    
+    },
 
     removeBtn: {
         position: "absolute",
         top: "4px",
         right: "4px",
+        backgroundColor: tokens.colorNeutralBackground1,
+    },
+
+    retryBtn: {
+        position: "absolute",
+        top: "4px",
+        right: "36px",
         backgroundColor: tokens.colorNeutralBackground1,
     },
 
@@ -148,6 +155,32 @@ const useFileUploaderStyles = makeStyles({
 
     compressedText: {
         color: tokens.colorPaletteGreenForeground1,
+    },
+
+    dropZoneTextContainer: {
+        textAlign: "center",
+    },
+
+    extensionsContainer: {
+        opacity: 0.7,
+        maxWidth: "450px",
+        marginTop: "4px",
+    },
+
+    videoPlayIconContainer: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: "none",
+        color: "white",
+        filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.7))",
+    },
+
+    documentFallbackThumbnail: {
+        backgroundColor: "#f3f2f1",
+        color: "#605e5c",
     },
 });
 

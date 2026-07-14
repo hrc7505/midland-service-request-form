@@ -25,6 +25,17 @@ const useImagePreviewDialogStyles = makeStyles({
     compressedText: {
         color: tokens.colorPaletteGreenForeground1,
     },
+
+    iframePreview: {
+        height: "80vh",
+        width: "100%",
+        border: "none",
+    },
+
+    fallbackPreview: {
+        height: "400px",
+        width: "100%",
+    },
 });
 
 export default useImagePreviewDialogStyles;
