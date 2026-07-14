@@ -25,21 +25,62 @@ export default function useProductUpload(product: IProduct, onChange: UpdateProd
 
     const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
 
+    const updateUploadedFiles = useCallback((newUploaded: IProductFile[]) => {
+        uploadedFilesRef.current = newUploaded;
+        onChange(productRef.current.id, "uploadedFiles", newUploaded);
+    }, [onChange]);
+
+    const updatePhotosList = useCallback((newPhotosList: File[]) => {
+        photosRef.current = newPhotosList;
+        onChange(productRef.current.id, "photos", newPhotosList);
+    }, [onChange]);
+
+    const uploadSingleFile = useCallback(async (file: File, sessionId: string) => {
+        const key = getFileKey(file);
+
+        // Set status to uploading and clear error
+        updateUploadedFiles(
+            uploadedFilesRef.current.map(u =>
+                u.fileKey === key ? { ...u, status: UploadStatus.Uploading, errorMsg: undefined } : u
+            )
+        );
+
+        try {
+            // 1. Create file in session
+            const fileReg = await UploadService.createUploadFile(
+                sessionId,
+                file.name,
+                file.type || "image/jpeg",
+                132190000 // ServiceRequestAttachment
+            );
+
+            // 2. Put binary data to Azure blob
+            await UploadService.uploadToAzureBlob(fileReg.UploadUrl, file);
+
+            // 3. Complete upload
+            await UploadService.completeUploadFile(sessionId, fileReg.FileId);
+
+            // 4. Update status to success
+            updateUploadedFiles(
+                uploadedFilesRef.current.map(u =>
+                    u.fileKey === key ? { ...u, status: UploadStatus.Success, fileId: fileReg.FileId } : u
+                )
+            );
+        } catch (err) {
+            console.error(`Failed uploading ${file.name}:`, err);
+            updateUploadedFiles(
+                uploadedFilesRef.current.map(u =>
+                    u.fileKey === key ? { ...u, status: UploadStatus.Error, errorMsg: err instanceof Error ? err.message : String(err) } : u
+                )
+            );
+        }
+    }, [updateUploadedFiles]);
+
     const handleFilesChange = useCallback(async (newFiles: File[]) => {
         const productId = productRef.current.id;
 
         const currentPhotos = photosRef.current;
         let currentUploaded = uploadedFilesRef.current;
-
-        const updateUploadedFiles = (newUploaded: IProductFile[]) => {
-            uploadedFilesRef.current = newUploaded;
-            onChange(productId, "uploadedFiles", newUploaded);
-        };
-
-        const updatePhotosList = (newPhotosList: File[]) => {
-            photosRef.current = newPhotosList;
-            onChange(productId, "photos", newPhotosList);
-        };
 
         // 1. Find removed files
         const newFileKeys = new Set(newFiles.map(getFileKey));
@@ -105,48 +146,6 @@ export default function useProductUpload(product: IProduct, onChange: UpdateProd
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        // Helper to upload a single file
-        const uploadSingleFile = async (file: File, sessionId: string) => {
-            const key = getFileKey(file);
-
-            // Set status to uploading
-            updateUploadedFiles(
-                uploadedFilesRef.current.map(u =>
-                    u.fileKey === key ? { ...u, status: UploadStatus.Uploading } : u
-                )
-            );
-
-            try {
-                // 1. Create file in session
-                const fileReg = await UploadService.createUploadFile(
-                    sessionId,
-                    file.name,
-                    file.type || "image/jpeg",
-                    132190000 // ServiceRequestAttachment
-                );
-
-                // 2. Put binary data to Azure blob
-                await UploadService.uploadToAzureBlob(fileReg.UploadUrl, file);
-
-                // 3. Complete upload
-                await UploadService.completeUploadFile(sessionId, fileReg.FileId);
-
-                // 4. Update status to success
-                updateUploadedFiles(
-                    uploadedFilesRef.current.map(u =>
-                        u.fileKey === key ? { ...u, status: UploadStatus.Success, fileId: fileReg.FileId } : u
-                    )
-                );
-            } catch (err) {
-                console.error(`Failed uploading ${file.name}:`, err);
-                updateUploadedFiles(
-                    uploadedFilesRef.current.map(u =>
-                        u.fileKey === key ? { ...u, status: UploadStatus.Error, errorMsg: err instanceof Error ? err.message : String(err) } : u
-                    )
-                );
-            }
-        };
-
         // Obtain or create session ID
         if (!currentSessionId) {
             if (!sessionCreationPromise.current) {
@@ -180,8 +179,33 @@ export default function useProductUpload(product: IProduct, onChange: UpdateProd
             await new Promise(resolve => setTimeout(resolve, 0));
         }
 
-    }, [onChange]);
+    }, [onChange, updatePhotosList, updateUploadedFiles, uploadSingleFile]);
 
-    return { handleFilesChange };
+    const handleRetryUpload = useCallback(async (file: File) => {
+        let currentSessionId = productRef.current.uploadSessionId;
+
+        if (!currentSessionId) {
+            if (!sessionCreationPromise.current) {
+                sessionCreationPromise.current = (async () => {
+                    const sid = await UploadService.createUploadSession(132190000);
+                    onChange(productRef.current.id, "uploadSessionId", sid);
+                    return sid;
+                })();
+            }
+            try {
+                currentSessionId = await sessionCreationPromise.current;
+            } catch (err) {
+                console.error("Failed to create upload session for retry:", err);
+                sessionCreationPromise.current = null;
+                return;
+            } finally {
+                sessionCreationPromise.current = null;
+            }
+        }
+
+        await uploadSingleFile(file, currentSessionId);
+    }, [onChange, uploadSingleFile]);
+
+    return { handleFilesChange, handleRetryUpload };
 }
 

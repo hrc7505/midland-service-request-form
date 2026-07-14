@@ -1,4 +1,5 @@
 import apiRequest from "@/app/utils/request";
+import { getFileCategory, FILE_CONFIG, FILE_CATEGORY } from "@/app/config/fileConfig";
 
 export interface IUploadSessionResponse {
     id?: string;
@@ -20,34 +21,10 @@ const logDev = (...args: unknown[]) => {
     }
 };
 
-const imageContentTypes = new Set([
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/heic",
-    "image/heif"
-]);
-
-const documentContentTypes = new Set([
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-]);
-
-const videoContentTypes = new Set([
-    "video/mp4",
-    "video/quicktime",
-    "video/webm"
-]);
-
-function getAttachmentType(contentType: string): string {
-    const type = (contentType || "").toLowerCase();
-    if (imageContentTypes.has(type)) return "Image";
-    if (documentContentTypes.has(type)) return "Document";
-    if (videoContentTypes.has(type)) return "Video";
-    return "Other";
+function getAttachmentType(contentType: string, fileName: string): string {
+    const category = getFileCategory({ type: contentType, name: fileName });
+    if (category === FILE_CATEGORY.UNKNOWN) return "Other";
+    return FILE_CONFIG[category].attachmentType;
 }
 
 export default class UploadService {
@@ -78,7 +55,7 @@ export default class UploadService {
         contentType: string,
         uploadPurpose?: number | string
     ): Promise<ICreateFileResponse> {
-        const attachmentType = getAttachmentType(contentType);
+        const attachmentType = getAttachmentType(contentType, fileName);
         logDev(`[UploadService] Registering file ${fileName} under session ${uploadSessionId}...`);
         const data = await apiRequest<ICreateFileResponse>(`/api/upload-sessions/${uploadSessionId}/files`, {
             method: "POST",

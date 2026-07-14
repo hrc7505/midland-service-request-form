@@ -12,4 +12,5 @@ export default interface FileUploaderProps {
     maxFiles?: number;
     disabled?: boolean;
     onError?: (message: string) => void;
+    onRetry?: (file: File) => void;
 }

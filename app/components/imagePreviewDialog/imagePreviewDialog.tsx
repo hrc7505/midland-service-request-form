@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useSyncExternalStore } from "react";
 import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, Button, Image, Text, mergeClasses } from "@fluentui/react-components";
 import { DismissRegular, VideoOffRegular, DocumentRegular } from "@fluentui/react-icons";
 
 import IImagePreviewDialogProps from "@/app/components/imagePreviewDialog/interfaces/IImagePreviewDialogProps";
 import formatSize from "@/app/utils/formatSize";
+import { getFileCategory, FILE_CATEGORY, PDF_MIME_TYPE } from "@/app/config/fileConfig";
 
 import useImagePreviewDialogStyles from "@/app/components/imagePreviewDialog/useImagePreviewDialogStyles";
 import useCommonStyles from "@/app/styles/useCommonStyles";
@@ -19,13 +20,21 @@ const ImagePreviewDialog: React.FC<IImagePreviewDialogProps> = ({ open, onOpenCh
             ? Math.round((1 - previewData.size / previewData.originalSize) * 100)
             : null, [previewData]);
 
+    const isMobile = useSyncExternalStore(
+        () => () => { },
+        () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+        () => false
+    );
+
     const [failedVideoUrl, setFailedVideoUrl] = useState<string | null>(null);
     const videoError = previewData?.url && failedVideoUrl === previewData.url;
 
     if (!previewData) return null;
 
-    const isVideo = previewData.type?.startsWith("video/");
-    const isImage = previewData.type?.startsWith("image/") || (!previewData.type && previewData.url);
+    const category = getFileCategory(previewData.file || { name: previewData.name, type: previewData.type || "" });
+    const isVideo = category === FILE_CATEGORY.VIDEO;
+    const isImage = category === FILE_CATEGORY.IMAGE;
+    const isDocument = category === FILE_CATEGORY.DOCUMENT;
 
     return (
         <Dialog open={open} onOpenChange={(_, data) => onOpenChange(data.open)}>
@@ -76,17 +85,16 @@ const ImagePreviewDialog: React.FC<IImagePreviewDialogProps> = ({ open, onOpenCh
                                 alt={previewData.name}
                                 className={styles.fullScreenImage}
                             />
-                        ) : previewData.type === "application/pdf" ? (
+                        ) : isDocument && !isMobile && previewData.type === PDF_MIME_TYPE ? (
                             <iframe
                                 src={previewData.url || ""}
-                                className={styles.fullScreenImage}
-                                style={{ height: "80vh", width: "100%", border: "none" }}
+                                className={mergeClasses(styles.fullScreenImage, styles.iframePreview)}
                                 title={previewData.name}
                             />
                         ) : (
-                            <div className={mergeClasses(commonStyles.flexColumn, commonStyles.flexCenter, commonStyles.gap2)} style={{ height: "400px", width: "100%" }}>
+                            <div className={mergeClasses(commonStyles.flexColumn, commonStyles.flexCenter, commonStyles.gap2, styles.fallbackPreview)}>
                                 <DocumentRegular fontSize={48} />
-                                <Text weight="semibold">Preview not available for this file format</Text>
+                                <Text weight="semibold">Preview not available for this file format{isMobile && isDocument ? " on mobile devices" : ""}</Text>
                                 <Text size={200}>You can still upload this document.</Text>
                             </div>
                         )}

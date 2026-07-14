@@ -2,13 +2,14 @@
 
 import React, { useState, useRef, useCallback, useMemo, useId, useEffect } from "react";
 import { Text, Button, mergeClasses, Image, Tooltip, Spinner, Field } from "@fluentui/react-components";
-import { ArrowUploadRegular, DocumentRegular, DismissRegular, CheckmarkCircleFilled, ErrorCircleFilled, DocumentPdfRegular, DocumentWordRegular, DocumentTextRegular, DocumentTableRegular, PlayCircleRegular } from "@fluentui/react-icons";
+import { ArrowUploadRegular, DocumentRegular, DismissRegular, CheckmarkCircleFilled, ErrorCircleFilled, DocumentPdfRegular, DocumentWordRegular, DocumentTextRegular, DocumentTableRegular, PlayCircleRegular, ArrowSyncRegular } from "@fluentui/react-icons";
 
 import compressImage from "@/app/utils/imageCompression";
 import FileUploaderProps from "@/app/components/fileUploader/interfaces/IFileUploaderProps";
 import { UploadStatus } from "@/app/interfaces/IFormState";
 import ImagePreviewDialog from "@/app/components/imagePreviewDialog/imagePreviewDialog";
 import formatSize from "@/app/utils/formatSize";
+import { FILE_CONFIG, FILE_UPLOADER_ACCEPT_STRING, getFileCategory, FILE_CATEGORY } from "@/app/config/fileConfig";
 
 import useFileUploaderStyles from "@/app/components/fileUploader/useFileUploaderStyles";
 import useCommonStyles from "@/app/styles/useCommonStyles";
@@ -24,19 +25,16 @@ import useCommonStyles from "@/app/styles/useCommonStyles";
  * - Accessible (ARIA + keyboard)
  * - Grid layout UI
  */
-const MAX_IMAGE_SIZE_MB = 2;
-const MAX_VIDEO_SIZE_MB = 25;
-const MAX_DOC_SIZE_MB = 8;
-
 const FileUploader: React.FC<FileUploaderProps> = ({
     files,
     uploadedFiles = [],
     onChange,
-    accept = "image/*",
+    accept = FILE_UPLOADER_ACCEPT_STRING,
     multiple = true,
     maxFiles = 6,
     disabled = false,
     onError,
+    onRetry,
 }) => {
     const styles = useFileUploaderStyles();
     const commonStyles = useCommonStyles();
@@ -59,14 +57,16 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const getFileKey = useCallback((file: File) => `${file.name}-${file.size}-${file.lastModified}`, []);
 
     const acceptedTypes = useMemo(() => accept.split(",").map((t) => t.trim()), [accept]);
-    
+
     const parsedExtensions = useMemo(() => {
         if (!accept) return null;
         const exts = acceptedTypes.filter(t => t.startsWith("."));
-        const images = exts.filter(e => [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".gif"].includes(e));
-        const videos = exts.filter(e => [".mp4", ".mov", ".webm", ".avi", ".mkv"].includes(e));
-        const docs = exts.filter(e => !images.includes(e) && !videos.includes(e));
-        return { images, videos, docs };
+
+        const result: Partial<Record<keyof typeof FILE_CONFIG, string[]>> = {};
+        for (const [category, config] of Object.entries(FILE_CONFIG)) {
+            result[category as keyof typeof FILE_CONFIG] = exts.filter(e => (config.extensions as readonly string[]).includes(e));
+        }
+        return result;
     }, [accept, acceptedTypes]);
 
     const isValidType = useCallback((file: File) => {
@@ -80,7 +80,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             if (type === "*/*") return true;
             if (type.endsWith("/*")) {
                 const baseType = type.replace("/*", "");
-                if (!file.type && baseType === "image") {
+                if (!file.type && baseType === FILE_CATEGORY.IMAGE) {
                     // Fallback for some mobile browsers returning empty file.type for camera photos
                     return true;
                 }
@@ -92,9 +92,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
     const isValidSize = useCallback((file: File) => {
         const sizeMB = file.size / (1024 * 1024);
-        if (file.type.startsWith("video/")) return sizeMB <= MAX_VIDEO_SIZE_MB;
-        if (file.type.startsWith("image/")) return sizeMB <= MAX_IMAGE_SIZE_MB;
-        return sizeMB <= MAX_DOC_SIZE_MB; // Documents
+        const category = getFileCategory(file);
+
+        if (category === FILE_CATEGORY.UNKNOWN) return sizeMB <= FILE_CONFIG[FILE_CATEGORY.DOCUMENT].maxSizeMB; // Fallback to document size
+
+        return sizeMB <= FILE_CONFIG[category].maxSizeMB;
     }, []);
 
     const triggerError = useCallback((message: string) => {
@@ -121,11 +123,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                 }
 
                 let processedFile = file;
+                const category = getFileCategory(file);
 
-                // Compress images only if > MAX_IMAGE_SIZE_MB
-                if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024 && (file.type.startsWith("image/") || (!file.type && acceptedTypes.includes("image/*")))) {
+                // Compress images only if > maxSizeMB
+                if (file.size > FILE_CONFIG[FILE_CATEGORY.IMAGE].maxSizeMB * 1024 * 1024 && category === FILE_CATEGORY.IMAGE) {
                     try {
-                        processedFile = await compressImage(file, MAX_IMAGE_SIZE_MB, 1920);
+                        processedFile = await compressImage(file, FILE_CONFIG[FILE_CATEGORY.IMAGE].maxSizeMB, 1920);
                     } catch (error) {
                         console.error("Image compression error:", error);
                     }
@@ -176,7 +179,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             onChange,
             triggerError,
             getFileKey,
-            acceptedTypes,
         ]
     );
 
@@ -199,15 +201,16 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             const newPreviews = await Promise.all(
                 files.map(async (file) => {
                     const key = getFileKey(file);
-                    
-                    if (file.type.startsWith("image/")) {
+                    const category = getFileCategory(file);
+
+                    if (category === FILE_CATEGORY.IMAGE) {
                         if (!objectUrls.current[key]) {
                             objectUrls.current[key] = URL.createObjectURL(file);
                         }
                         return { key, url: objectUrls.current[key] };
-                    } 
-                    
-                    if (file.type.startsWith("video/")) {
+                    }
+
+                    if (category === FILE_CATEGORY.VIDEO) {
                         if (!objectUrls.current[key]) {
                             const { default: getVideoThumbnail } = await import("@/app/utils/videoThumbnail");
                             const thumbUrl = await getVideoThumbnail(file);
@@ -215,15 +218,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                         }
                         return { key, url: objectUrls.current[key] };
                     }
-                    
+
                     return { key, url: null };
                 })
             );
-            
+
             // Wait for all to finish before updating state to prevent flicker
             setPreviews(newPreviews);
         };
-        
+
         loadPreviews();
     }, [files, getFileKey]);
 
@@ -264,7 +267,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     // Cleanup video blob URL when closing preview
     useEffect(() => {
         const previewUrl = fullScreenPreview?.url;
-        const isVideo = fullScreenPreview?.type?.startsWith("video/");
+        const isVideo = fullScreenPreview?.file ? getFileCategory(fullScreenPreview.file) === FILE_CATEGORY.VIDEO : false;
         return () => {
             if (previewUrl && isVideo && previewUrl.startsWith("blob:")) {
                 URL.revokeObjectURL(previewUrl);
@@ -327,19 +330,20 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                                 : "Drag files or click to upload"}
                     </Text>
 
-                    <div className={mergeClasses(commonStyles.flexColumn, commonStyles.flexCenter, commonStyles.gap1)} style={{ textAlign: "center" }}>
+                    <div className={mergeClasses(commonStyles.flexColumn, commonStyles.flexCenter, commonStyles.gap1, styles.dropZoneTextContainer)}>
                         <Text size={200}>Maximum {maxFiles} files allowed</Text>
                         {parsedExtensions && (
-                            <div className={mergeClasses(commonStyles.flexColumn, commonStyles.flexCenter, commonStyles.gap1)} style={{ opacity: 0.7, maxWidth: "450px", marginTop: "4px" }}>
-                                {parsedExtensions.images.length > 0 && (
-                                    <Text size={100}>Images (≤ {MAX_IMAGE_SIZE_MB}MB): {parsedExtensions.images.join(", ")}</Text>
-                                )}
-                                {parsedExtensions.videos.length > 0 && (
-                                    <Text size={100}>Videos (≤ {MAX_VIDEO_SIZE_MB}MB): {parsedExtensions.videos.join(", ")}</Text>
-                                )}
-                                {parsedExtensions.docs.length > 0 && (
-                                    <Text size={100}>Docs (≤ {MAX_DOC_SIZE_MB}MB): {parsedExtensions.docs.join(", ")}</Text>
-                                )}
+                            <div className={mergeClasses(commonStyles.flexColumn, commonStyles.flexCenter, commonStyles.gap1, styles.extensionsContainer)}>
+                                {Object.entries(parsedExtensions).map(([category, exts]) => {
+                                    if (!exts || exts.length === 0) return null;
+                                    const config = FILE_CONFIG[category as keyof typeof FILE_CONFIG];
+                                    const label = category.charAt(0).toUpperCase() + category.slice(1) + "s"; // e.g., 'Images'
+                                    return (
+                                        <Text key={category} size={100}>
+                                            {label} (≤ {config.maxSizeMB}MB): {exts.join(", ")}
+                                        </Text>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -400,7 +404,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                                                     alt={file.name}
                                                     className={mergeClasses(styles.thumbnail, styles.thumbnailClickable)}
                                                     onClick={() => setFullScreenPreview({
-                                                        url: file.type.startsWith("video/") ? URL.createObjectURL(file) : preview,
+                                                        url: getFileCategory(file) === FILE_CATEGORY.VIDEO ? URL.createObjectURL(file) : preview,
                                                         file: file,
                                                         name: file.name,
                                                         size: file.size,
@@ -408,17 +412,8 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                                                         originalSize: (file as File & { originalSize?: number }).originalSize
                                                     })}
                                                 />
-                                                {file.type.startsWith("video/") && (
-                                                    <div
-                                                        className={commonStyles.flexCenter}
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: 0, left: 0, right: 0, bottom: 0,
-                                                            pointerEvents: "none",
-                                                            color: "white",
-                                                            filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.7))"
-                                                        }}
-                                                    >
+                                                {getFileCategory(file) === FILE_CATEGORY.VIDEO && (
+                                                    <div className={mergeClasses(commonStyles.flexCenter, styles.videoPlayIconContainer)}>
                                                         <PlayCircleRegular fontSize={40} />
                                                     </div>
                                                 )}
@@ -426,12 +421,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                                         ) : (
                                             <div
                                                 className={mergeClasses(
-                                                    styles.thumbnail, 
+                                                    styles.thumbnail,
                                                     styles.thumbnailClickable,
                                                     commonStyles.flexColumn,
-                                                    commonStyles.flexCenter
+                                                    commonStyles.flexCenter,
+                                                    styles.documentFallbackThumbnail
                                                 )}
-                                                style={{ backgroundColor: "#f3f2f1", color: "#605e5c" }}
                                                 onClick={() => setFullScreenPreview({
                                                     url: URL.createObjectURL(file),
                                                     file: file,
@@ -499,6 +494,20 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                                         }}
                                         aria-label={`Remove ${file.name}`}
                                     />
+
+                                    {isError && onRetry && (
+                                        <Button
+                                            className={styles.retryBtn}
+                                            appearance="subtle"
+                                            icon={<ArrowSyncRegular />}
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onRetry(file);
+                                            }}
+                                            aria-label={`Retry upload for ${file.name}`}
+                                        />
+                                    )}
 
                                     <div className={styles.fileFooter}>
                                         <Text className={mergeClasses(commonStyles.textNoWrap, styles.fileName)}>
