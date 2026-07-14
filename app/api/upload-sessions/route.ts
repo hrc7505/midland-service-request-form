@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 
 import serverRequest from "@/app/utils/serverRequest";
 
-export async function POST() {
+export async function POST(req: Request) {
     try {
+        const body = await req.json().catch(() => ({}));
+
         const res = await serverRequest("/api/upload-sessions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
+            body: JSON.stringify(body),
         });
 
         if (!res.ok) {

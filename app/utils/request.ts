@@ -43,11 +43,14 @@ export default async function apiRequest<T = unknown>(
 
     if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
+        let originalError: unknown = null;
         try {
             const errorText = await response.text();
             if (errorText) {
+                originalError = errorText;
                 try {
                     const parsed = JSON.parse(errorText);
+                    originalError = parsed;
                     errorMessage = parsed.error || parsed.message || errorText;
                 } catch {
                     errorMessage = errorText;
@@ -56,7 +59,7 @@ export default async function apiRequest<T = unknown>(
         } catch {
             // Ignore parse errors, use default message
         }
-        console.error(`[API Error] ${options.method || "GET"} ${url} failed:`, response.status, errorMessage);
+        console.error(`[API Error] ${options.method || "GET"} ${url} failed:`, response.status, errorMessage, "\nOriginal Error:", originalError);
         throw new Error(errorMessage);
     }
 

@@ -121,7 +121,8 @@ export default function useProductUpload(product: IProduct, onChange: UpdateProd
                 const fileReg = await UploadService.createUploadFile(
                     sessionId,
                     file.name,
-                    file.type || "image/jpeg"
+                    file.type || "image/jpeg",
+                    132190000 // ServiceRequestAttachment
                 );
 
                 // 2. Put binary data to Azure blob
@@ -150,7 +151,7 @@ export default function useProductUpload(product: IProduct, onChange: UpdateProd
         if (!currentSessionId) {
             if (!sessionCreationPromise.current) {
                 sessionCreationPromise.current = (async () => {
-                    const sid = await UploadService.createUploadSession();
+                    const sid = await UploadService.createUploadSession(132190000);
                     onChange(productId, "uploadSessionId", sid);
                     return sid;
                 })();
