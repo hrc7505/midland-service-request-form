@@ -12,7 +12,7 @@ export interface ServerResponse<T> {
 export default async function serverRequest<T = unknown>(
     path: string,
     options: RequestInit = {},
-    timeoutMs = 15000
+    timeoutMs = 60000
 ): Promise<ServerResponse<T>> {
     const baseUrl = process.env.BASE_API_URL;
     const url = `${baseUrl}${path}`;
@@ -35,6 +35,7 @@ export default async function serverRequest<T = unknown>(
 
         let errorText: string | undefined = undefined;
         if (!response.ok) {
+            console.error(`[Upstream API Error] ${options.method || "GET"} ${url} failed with status ${response.status}. Full response:`, data, "\nRaw text:", text);
             if (data && typeof data === "object" && "error" in data) {
                 errorText = String((data as Record<string, unknown>).error);
             } else if (data && typeof data === "object" && "message" in data) {

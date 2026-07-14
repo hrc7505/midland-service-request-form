@@ -10,7 +10,6 @@ export default interface FileUploaderProps {
     accept?: string;
     multiple?: boolean;
     maxFiles?: number;
-    maxFileSizeMB?: number;
     disabled?: boolean;
     onError?: (message: string) => void;
 }

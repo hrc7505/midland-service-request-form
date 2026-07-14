@@ -208,12 +208,13 @@ export default function ProductFormFields({ product, onChange, showErrors }: Pro
                 />
             </Field>
 
-            {/* Photos */}
-            <Field label="Additional Photos">
+            {/* Photos & Videos */}
+            <Field label="Additional Files (Photos, Videos, Documents)">
                 <FileUploader
                     files={product.photos || []}
                     uploadedFiles={product.uploadedFiles || []}
                     onChange={handlePhotosChange}
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif,video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.doc,.docx,.xls,.xlsx"
                 />
             </Field>
 

@@ -8,12 +8,14 @@ export async function POST(
 ) {
     try {
         const { uploadSessionId, fileId } = await params;
+        const body = await request.json().catch(() => ({}));
 
         const res = await serverRequest(`/api/upload-sessions/${uploadSessionId}/files/${fileId}/complete`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
+            body: JSON.stringify(body),
         });
 
         if (!res.ok) {

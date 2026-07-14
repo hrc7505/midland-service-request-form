@@ -20,14 +20,45 @@ const logDev = (...args: unknown[]) => {
     }
 };
 
+const imageContentTypes = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/heif"
+]);
+
+const documentContentTypes = new Set([
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+]);
+
+const videoContentTypes = new Set([
+    "video/mp4",
+    "video/quicktime",
+    "video/webm"
+]);
+
+function getAttachmentType(contentType: string): string {
+    const type = (contentType || "").toLowerCase();
+    if (imageContentTypes.has(type)) return "Image";
+    if (documentContentTypes.has(type)) return "Document";
+    if (videoContentTypes.has(type)) return "Video";
+    return "Other";
+}
+
 export default class UploadService {
     /**
      * Creates a new upload session
      */
-    static async createUploadSession(): Promise<string> {
+    static async createUploadSession(uploadPurpose?: number | string): Promise<string> {
         logDev("[UploadService] Creating upload session...");
         const data = await apiRequest<IUploadSessionResponse>("/api/upload-sessions", {
             method: "POST",
+            body: uploadPurpose ? { uploadPurpose } : undefined,
         });
 
         logDev("[UploadService] Create session response:", data);
@@ -44,12 +75,14 @@ export default class UploadService {
     static async createUploadFile(
         uploadSessionId: string,
         fileName: string,
-        contentType: string
+        contentType: string,
+        uploadPurpose?: number | string
     ): Promise<ICreateFileResponse> {
+        const attachmentType = getAttachmentType(contentType);
         logDev(`[UploadService] Registering file ${fileName} under session ${uploadSessionId}...`);
         const data = await apiRequest<ICreateFileResponse>(`/api/upload-sessions/${uploadSessionId}/files`, {
             method: "POST",
-            body: { fileName, contentType },
+            body: { fileName, contentType, attachmentType, uploadPurpose },
         });
 
         // Redact SAS url from logs to avoid exposure of sensitive credentials
