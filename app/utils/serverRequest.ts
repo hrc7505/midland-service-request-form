@@ -12,7 +12,7 @@ export interface ServerResponse<T> {
 export default async function serverRequest<T = unknown>(
     path: string,
     options: RequestInit = {},
-    timeoutMs = 60000
+    timeoutMs = 120000
 ): Promise<ServerResponse<T>> {
     const baseUrl = process.env.BASE_API_URL;
     const url = `${baseUrl}${path}`;
