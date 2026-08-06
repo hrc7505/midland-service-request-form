@@ -31,6 +31,14 @@ const APPLIANCES = [
     { label: "Range", value: "Range" },
     { label: "Oven", value: "Oven" },
     { label: "Microwave", value: "Microwave" },
+    { label: "Speed Oven", value: "Speed Oven" },
+    { label: "Steam Oven", value: "Steam Oven" },
+    { label: "Hood fan", value: "Hood fan" },
+    { label: "Cooktop", value: "Cooktop" },
+    { label: "Beverage Center", value: "Beverage Center" },
+    { label: "Wine Cooler", value: "Wine Cooler" },
+    { label: "Freezer", value: "Freezer" },
+    { label: "BBQ", value: "BBQ" },
 ] as const;
 
 export default function ProductFormFields({ product, onChange, showErrors }: ProductFormFieldsProps) {
